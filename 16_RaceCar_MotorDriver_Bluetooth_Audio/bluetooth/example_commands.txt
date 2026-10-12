@@ -1,0 +1,55 @@
+# Example Command Sequences for Serial / Bluetooth Terminal Testing
+# Copy and paste these lines into your terminal at 115200 baud.
+
+# 1. System Health & Initial Inspection
+STATUS
+HELP
+
+# 2. Start Engine & Motor Driver
+START
+
+# 3. Test Engine Revs Without Wheel Movement
+REV
+REV
+
+# 4. Drive Forward Gently (25% Throttle)
+THROTTLE:25
+STATUS
+
+# 5. Increase Speed to 60%
+THROTTLE:60
+STATUS
+
+# 6. Test Sequential Shifting
+GEAR:UP
+GEAR:UP
+GEAR:DOWN
+
+# 7. Test Steering (Gentle Right Turn)
+STEER:30
+STEER:0
+
+# 8. Test Mecanum Omnidirectional Strafing
+MODE:MECANUM
+STRAFE:-50
+STRAFE:50
+STRAFE:0
+
+# 9. Test Combined Vector Driving
+DRIVE:40,10,-20
+DRIVE:0,0,0
+
+# 10. Test Turbocharger Boost Effect
+TURBO:ON
+THROTTLE:90
+THROTTLE:10
+
+# 11. Test Active Braking & Overrun Crackle
+BRAKE
+
+# 12. Test Emergency Stop & Recovery
+ESTOP
+STATUS
+RESET
+START
+STATUS

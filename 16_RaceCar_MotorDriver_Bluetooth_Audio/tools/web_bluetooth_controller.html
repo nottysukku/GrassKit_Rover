@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🏎️ STM32 Race Car Mobile Dashboard</title>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --card: #161922;
+      --card-border: #242938;
+      --accent: #ff4757;
+      --accent-blue: #1e90ff;
+      --accent-green: #2ed573;
+      --accent-gold: #ffa502;
+      --text: #f1f2f6;
+      --text-dim: #747d8c;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px;
+      touch-action: manipulation;
+    }
+    .header {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    .btn-connect {
+      background: var(--accent-blue);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--accent);
+    }
+    .status-badge.connected { color: var(--accent-green); }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .dashboard-card {
+      width: 100%;
+      max-width: 500px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    canvas#tacho {
+      width: 280px;
+      height: 160px;
+    }
+    .digital-cluster {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .stat-box {
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 26px;
+      font-weight: 800;
+      font-family: monospace;
+      color: var(--accent-green);
+    }
+    .stat-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+    }
+    .gear-row {
+      display: flex;
+      gap: 6px;
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 12px;
+    }
+    .btn-gear {
+      flex: 1;
+      padding: 12px 0;
+      background: #1f232e;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      font-weight: bold;
+      font-size: 15px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .btn-gear.active {
+      background: var(--accent-gold);
+      color: black;
+      border-color: var(--accent-gold);
+    }
+    .fx-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 12px;
+    }
+    .btn-fx {
+      flex: 1;
+      padding: 12px;
+      background: #1f232e;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      border-radius: 10px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-fx.turbo-on {
+      background: var(--accent-blue);
+      color: white;
+    }
+    /* Controls Section */
+    .controls-grid {
+      width: 100%;
+      max-width: 500px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .btn-pad {
+      background: #242938;
+      border: 1px solid var(--card-border);
+      color: white;
+      font-weight: bold;
+      font-size: 15px;
+      padding: 18px 0;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: none;
+    }
+    .btn-pad:active {
+      background: var(--accent-blue);
+      transform: scale(0.96);
+    }
+    .btn-estop {
+      width: 100%;
+      max-width: 500px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 18px;
+      border-radius: 12px;
+      font-weight: 900;
+      font-size: 18px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(255, 71, 87, 0.4);
+      margin-bottom: 8px;
+    }
+    .log-box {
+      width: 100%;
+      max-width: 500px;
+      background: #090a0d;
+      border: 1px solid #1a1c24;
+      border-radius: 8px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 11px;
+      color: #a4b0be;
+      height: 80px;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h3 style="font-size:16px;">🏎️ RACECAR BLE</h3>
+      <small style="color:var(--text-dim);">NUCLEO-L073RZ + RBT01</small>
+    </div>
+    <div class="status-badge" id="badge">
+      <div class="status-dot"></div>
+      <span id="status-text">DISCONNECTED</span>
+    </div>
+    <button class="btn-connect" id="btn-conn" onclick="toggleBLE()">CONNECT</button>
+  </div>
+
+  <div class="dashboard-card">
+    <canvas id="tacho" width="560" height="320"></canvas>
+    <div class="digital-cluster">
+      <div class="stat-box">
+        <div class="stat-val" id="disp-rpm">900</div>
+        <div class="stat-lbl">ENGINE RPM</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="disp-gear" style="color:var(--accent-gold);">1</div>
+        <div class="stat-lbl">GEAR</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="disp-boost" style="color:var(--accent-blue);">0.0</div>
+        <div class="stat-lbl">BOOST (BAR)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gearbox -->
+  <div class="gear-row">
+    <button class="btn-gear active" onclick="setGear(1)">1</button>
+    <button class="btn-gear" onclick="setGear(2)">2</button>
+    <button class="btn-gear" onclick="setGear(3)">3</button>
+    <button class="btn-gear" onclick="setGear(4)">4</button>
+    <button class="btn-gear" onclick="setGear(5)">5</button>
+    <button class="btn-gear" onclick="setGear(6)">6</button>
+    <button class="btn-gear" onclick="sendCmd('GEAR:AUTO\r\n')">A</button>
+  </div>
+
+  <!-- Action Row -->
+  <div class="fx-row">
+    <button class="btn-fx" id="btn-turbo" onclick="toggleTurbo()">🚀 TURBO: OFF</button>
+    <button class="btn-fx" style="background:#ffa502; color:black;" onclick="sendCmd('REV\r\n')">💨 REV ENGINE</button>
+    <button class="btn-fx" style="background:#2ed573; color:black;" onclick="sendCmd('START\r\n')">▶️ START</button>
+  </div>
+
+  <!-- Mecanum Omnidirectional Driving Pad -->
+  <div class="controls-grid">
+    <button class="btn-pad" onpointerdown="startDrive(60, 0, -60)" onpointerup="stopDrive()">↖</button>
+    <button class="btn-pad" onpointerdown="startDrive(75, 0, 0)" onpointerup="stopDrive()">▲<br><small>FWD</small></button>
+    <button class="btn-pad" onpointerdown="startDrive(60, 0, 60)" onpointerup="stopDrive()">↗</button>
+
+    <button class="btn-pad" onpointerdown="startDrive(0, 0, -70)" onpointerup="stopDrive()">◀<br><small>STRAFE L</small></button>
+    <button class="btn-pad" style="background:#ff4757;" onclick="stopDrive()">⏹<br><small>STOP</small></button>
+    <button class="btn-pad" onpointerdown="startDrive(0, 0, 70)" onpointerup="stopDrive()">▶<br><small>STRAFE R</small></button>
+
+    <button class="btn-pad" onpointerdown="startDrive(0, -60, 0)" onpointerup="stopDrive()">↺<br><small>TURN L</small></button>
+    <button class="btn-pad" onpointerdown="startDrive(-60, 0, 0)" onpointerup="stopDrive()">▼<br><small>REV</small></button>
+    <button class="btn-pad" onpointerdown="startDrive(0, 60, 0)" onpointerup="stopDrive()">↻<br><small>TURN R</small></button>
+  </div>
+
+  <button class="btn-estop" onclick="triggerEStop()">⛔ EMERGENCY STOP</button>
+
+  <div class="log-box" id="log">Logs & Bluetooth telemetry will appear here...</div>
+
+  <script>
+    let bleDevice = null;
+    let rxChar = null;
+    let txChar = null;
+    let turboState = false;
+    let currentRpm = 900;
+    let driveInterval = null;
+
+    // Standard Nordic UART / ST BlueST UUIDs
+    const SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+    const TX_CHAR_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+    const RX_CHAR_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
+
+    function log(msg) {
+      const box = document.getElementById("log");
+      box.innerHTML += `<div>${msg}</div>`;
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function toggleBLE() {
+      if (bleDevice && bleDevice.gatt.connected) {
+        bleDevice.gatt.disconnect();
+        return;
+      }
+      try {
+        log("Searching for RACECAR BLE device...");
+        bleDevice = await navigator.bluetooth.requestDevice({
+          acceptAllDevices: true,
+          optionalServices: [SERVICE_UUID, "0000fe80-0000-1000-8000-00805f9b34fb"]
+        });
+
+        bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
+        log("Connecting to GATT server...");
+        const server = await bleDevice.gatt.connect();
+
+        log("Discovering services...");
+        const services = await server.getPrimaryServices();
+        let targetService = services[0];
+
+        const chars = await targetService.getCharacteristics();
+        for (const c of chars) {
+          if (c.properties.write || c.properties.writeWithoutResponse) txChar = c;
+          if (c.properties.notify || c.properties.read) {
+            rxChar = c;
+            await rxChar.startNotifications();
+            rxChar.addEventListener('characteristicvaluechanged', onDataReceived);
+          }
+        }
+
+        document.getElementById("btn-conn").innerText = "DISCONNECT";
+        document.getElementById("badge").className = "status-badge connected";
+        document.getElementById("status-text").innerText = "CONNECTED";
+        log("Connected successfully! Ready to drive.");
+        sendCmd("STATUS\r\n");
+      } catch (err) {
+        log("BLE Error: " + err);
+      }
+    }
+
+    function onDisconnected() {
+      document.getElementById("btn-conn").innerText = "CONNECT";
+      document.getElementById("badge").className = "status-badge";
+      document.getElementById("status-text").innerText = "DISCONNECTED";
+      log("Bluetooth disconnected.");
+    }
+
+    function onDataReceived(event) {
+      const text = new TextDecoder().decode(event.target.value);
+      log("<< " + text.trim());
+      if (text.includes("RPM=")) {
+        const match = text.match(/RPM=([0-9]+)/);
+        if (match) {
+          currentRpm = parseInt(match[1]);
+          document.getElementById("disp-rpm").innerText = currentRpm;
+          drawTachometer(currentRpm);
+        }
+        const gMatch = text.match(/GEAR=([0-9]+)/);
+        if (gMatch) document.getElementById("disp-gear").innerText = gMatch[1];
+        const bMatch = text.match(/BOOST=([0-9.]+)/);
+        if (bMatch) document.getElementById("disp-boost").innerText = bMatch[1];
+      }
+    }
+
+    async function sendCmd(str) {
+      if (!txChar) {
+        log(">> (Not connected) " + str.trim());
+        return;
+      }
+      try {
+        const data = new TextEncoder().encode(str);
+        await txChar.writeValue(data);
+        log(">> " + str.trim());
+      } catch (e) {
+        log("TX Err: " + e);
+      }
+    }
+
+    function startDrive(th, st, strf) {
+      sendCmd(`DRIVE:${th},${st},${strf}\r\n`);
+      if (driveInterval) clearInterval(driveInterval);
+      driveInterval = setInterval(() => {
+        sendCmd(`DRIVE:${th},${st},${strf}\r\n`);
+      }, 100);
+    }
+
+    function stopDrive() {
+      if (driveInterval) {
+        clearInterval(driveInterval);
+        driveInterval = null;
+      }
+      sendCmd("DRIVE:0,0,0\r\n");
+    }
+
+    function triggerEStop() {
+      stopDrive();
+      sendCmd("ESTOP\r\n");
+    }
+
+    function setGear(g) {
+      document.querySelectorAll(".btn-gear").forEach(b => b.classList.remove("active"));
+      event.target.classList.add("active");
+      sendCmd(`GEAR:${g}\r\n`);
+    }
+
+    function toggleTurbo() {
+      turboState = !turboState;
+      const b = document.getElementById("btn-turbo");
+      if (turboState) {
+        b.className = "btn-fx turbo-on";
+        b.innerText = "🚀 TURBO: ON";
+        sendCmd("TURBO:ON\r\n");
+      } else {
+        b.className = "btn-fx";
+        b.innerText = "🚀 TURBO: OFF";
+        sendCmd("TURBO:OFF\r\n");
+      }
+    }
+
+    function drawTachometer(rpm) {
+      const cvs = document.getElementById("tacho");
+      const ctx = cvs.getContext("2d");
+      const cx = cvs.width / 2;
+      const cy = cvs.height - 30;
+      const r = 210;
+
+      ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+      // Arc
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, Math.PI * 0.8, Math.PI * 2.2);
+      ctx.lineWidth = 18;
+      ctx.strokeStyle = "#242938";
+      ctx.stroke();
+
+      // Redline Arc (6000-8000 RPM)
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, Math.PI * 1.85, Math.PI * 2.2);
+      ctx.lineWidth = 18;
+      ctx.strokeStyle = "#ff4757";
+      ctx.stroke();
+
+      // Needle
+      const norm = Math.min(Math.max(rpm, 0), 8000) / 8000;
+      const angle = Math.PI * 0.8 + norm * (Math.PI * 1.4);
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(angle) * (r - 20), cy + Math.sin(angle) * (r - 20));
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "#ff4757";
+      ctx.lineCap = "round";
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+    }
+
+    drawTachometer(900);
+  </script>
+</body>
+</html>

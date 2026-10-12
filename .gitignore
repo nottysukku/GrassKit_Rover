@@ -1,0 +1,22 @@
+# Firmware build outputs (regenerate with firmware/build_firmware.ps1)
+**/firmware/build/
+
+# STM32CubeIDE / Eclipse workspace output
+.metadata/
+**/firmware/Debug/
+**/firmware/Release/
+
+# Python
+__pycache__/
+*.pyc
+
+# ST vendor package bulk that the firmware build does not use (~105 MB).
+# Still present locally; only HAL sources and the CMSIS core/device headers are tracked.
+**/Drivers/CMSIS/docs/
+**/Drivers/CMSIS/DSP/
+**/Drivers/CMSIS/Lib/
+**/Drivers/CMSIS/NN/
+**/Drivers/CMSIS/RTOS/
+**/Drivers/CMSIS/RTOS2/
+**/Drivers/CMSIS/Core_A/
+*.chm
