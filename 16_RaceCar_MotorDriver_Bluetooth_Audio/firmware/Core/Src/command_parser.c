@@ -8,7 +8,6 @@
 #include "command_parser.h"
 #include "motor_control.h"
 #include "engine_model.h"
-#include "audio_engine.h"
 #include "safety.h"
 #include "bluetooth.h"
 #include <string.h>
@@ -41,12 +40,11 @@ void Command_Parse(char *cmd_str)
     buffer[sizeof(buffer) - 1] = '\0';
     ToUpperString(buffer);
 
-    /* Reset communication watchdog timer upon valid packet */
-    Safety_KickWatchdog();
+    /* Cleared for unknown or malformed lines so they cannot keep the car alive */
+    bool valid = true;
 
     if (strcmp(buffer, "START") == 0) {
         Motor_Start();
-        Audio_Start();
         Bluetooth_Send("OK:START\r\n");
     }
     else if (strcmp(buffer, "STOP") == 0) {
@@ -57,7 +55,6 @@ void Command_Parse(char *cmd_str)
     else if (strcmp(buffer, "BRAKE") == 0) {
         Motor_Brake();
         Engine_SetThrottle(0.0f);
-        Audio_TriggerOverrunPop(18000);
         Bluetooth_Send("OK:BRAKE\r\n");
     }
     else if (strcmp(buffer, "ESTOP") == 0) {
@@ -88,14 +85,21 @@ void Command_Parse(char *cmd_str)
     }
     else if (strncmp(buffer, "DRIVE:", 6) == 0) {
         /* Format: DRIVE:<throttle>,<steer>,<strafe> */
-        float th = 0.0f, st = 0.0f, strf = 0.0f;
-        if (sscanf(buffer + 6, "%f,%f,%f", &th, &st, &strf) >= 1) {
-            Motor_SetDrive(th, st, strf);
-            Engine_SetThrottle(th);
-            Bluetooth_Send("OK:DRIVE\r\n");
-        } else {
-            Bluetooth_Send("ERR:INVALID_DRIVE_ARGS\r\n");
+        char *p = buffer + 6;
+        float th = (float)atof(p);
+        float st = 0.0f;
+        float strf = 0.0f;
+        char *comma1 = strchr(p, ',');
+        if (comma1) {
+            st = (float)atof(comma1 + 1);
+            char *comma2 = strchr(comma1 + 1, ',');
+            if (comma2) {
+                strf = (float)atof(comma2 + 1);
+            }
         }
+        Motor_SetDrive(th, st, strf);
+        Engine_SetThrottle(th);
+        Bluetooth_Send("OK:DRIVE\r\n");
     }
     else if (strncmp(buffer, "GEAR:", 5) == 0) {
         char *arg = buffer + 5;
@@ -115,6 +119,7 @@ void Command_Parse(char *cmd_str)
                 Engine_SetGear((uint8_t)g);
                 Bluetooth_Send("OK:GEAR\r\n");
             } else {
+                valid = false;
                 Bluetooth_Send("ERR:INVALID_GEAR\r\n");
             }
         }
@@ -130,21 +135,38 @@ void Command_Parse(char *cmd_str)
     }
     else if (strncmp(buffer, "REV", 3) == 0) {
         Engine_RevThrottle(1800.0f);
-        Audio_TriggerOverrunPop(14000);
         Bluetooth_Send("OK:REV\r\n");
-    }
-    else if (strncmp(buffer, "VOLUME:", 7) == 0) {
-        int v = atoi(buffer + 7);
-        Audio_SetVolume((uint8_t)v);
-        Bluetooth_Send("OK:VOLUME\r\n");
     }
     else if (strncmp(buffer, "MODE:", 5) == 0) {
         if (strcmp(buffer + 5, "MECANUM") == 0) {
             Motor_SetMode(DRIVE_MODE_MECANUM_OMNI);
             Bluetooth_Send("OK:MODE_MECANUM\r\n");
-        } else {
+        } else if (strcmp(buffer + 5, "RACECAR") == 0) {
             Motor_SetMode(DRIVE_MODE_RACECAR);
             Bluetooth_Send("OK:MODE_RACECAR\r\n");
+        } else {
+            valid = false;
+            Bluetooth_Send("ERR:INVALID_MODE\r\n");
+        }
+    }
+    else if (strncmp(buffer, "MOTOR:", 6) == 0) {
+        /* Format: MOTOR:<1-4>,<speed%> e.g. MOTOR:1,30 or MOTOR:4,25 */
+        char *p = buffer + 6;
+        int m_id = atoi(p);
+        float spd = 0.0f;
+        char *comma = strchr(p, ',');
+        if (comma) {
+            spd = (float)atof(comma + 1);
+        }
+        if (m_id >= 1 && m_id <= 4) {
+            Motor_Start();
+            Motor_SetIndividual((uint8_t)(m_id - 1), spd);
+            char resp[32];
+            snprintf(resp, sizeof(resp), "OK:MOTOR_%d\r\n", m_id);
+            Bluetooth_Send(resp);
+        } else {
+            valid = false;
+            Bluetooth_Send("ERR:INVALID_MOTOR_ID\r\n");
         }
     }
     else if (strcmp(buffer, "STATUS") == 0) {
@@ -162,7 +184,13 @@ void Command_Parse(char *cmd_str)
         Command_SendHelp();
     }
     else {
+        valid = false;
         Bluetooth_Send("ERR:UNKNOWN_COMMAND\r\n");
+    }
+
+    /* Reset communication watchdog timer upon valid packet */
+    if (valid) {
+        Safety_KickWatchdog();
     }
 }
 
@@ -207,6 +235,5 @@ void Command_SendHelp(void)
                    "TURBO:<ON|OFF>\r\n"
                    "REV\r\n"
                    "MODE:<RACECAR|MECANUM>\r\n"
-                   "VOLUME:<0..100>\r\n"
                    "STATUS\r\n");
 }

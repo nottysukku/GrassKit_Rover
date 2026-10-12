@@ -7,7 +7,6 @@
   * Hardware Target:
   *   - MCU: STM32L073RZ (NUCLEO-L073RZ)
   *   - Motor Driver: ST X-STM32MP-RBT01 (Dual STSPIN948, 4 DC Brushed Motors)
-  *   - Audio Amplifier: MAX98357A I2S Mono Class-D Amplifier
   *   - Bluetooth Module: ST X-NUCLEO-IDB05A2 (SPBTLE-1S / BlueNRG-M0) + UART
   *   - Chassis: 4-Wheel Mecanum Drive Chassis
   ******************************************************************************
@@ -35,21 +34,34 @@ extern "C" {
  * 2. MOTOR DRIVER BOARD: ST X-STM32MP-RBT01 (Dual STSPIN948)
  * =============================================================================
  * The X-STM32MP-RBT01 features two STSPIN948 ICs driving 4 Brushed DC motors.
- * 
- * [VERIFY HARDWARE] CONNECTOR NOTE:
- * The board features a 40-pin Raspberry Pi-compatible header (2x20 pins, 2.54mm).
- * Wiring from Nucleo-L073RZ Morpho/Arduino pins to the 40-pin header is documented
- * in hardware/pinout.md and wiring.md.
  *
- * Motor Channels:
- *   - Motor 1 (M1): Front-Left  (FL) - Screw Terminal J1 Pins 1-2
- *   - Motor 2 (M2): Front-Right (FR) - Screw Terminal J1 Pins 3-4
- *   - Motor 3 (M3): Rear-Left   (RL) - Screw Terminal J4 Pins 1-2
- *   - Motor 4 (M4): Rear-Right  (RR) - Screw Terminal J4 Pins 3-4
+ * Pin mapping checked against ST UM3482 Rev 1 (Table 2, Table 11, schematics
+ * 4/10 and 5/10) and the STSPIN948 datasheet DS14271 Rev 2 (Table 8, Table 9).
+ * Wiring from the Nucleo-L073RZ to the 40-pin header (CN2) is documented in
+ * hardware/pinout.md and docs/wiring.md.
+ *
+ * Both drivers run in dual independent full-bridge mode (default jumpers:
+ * MODE1 LOW, MODE2 HIGH, MODE3 LOW). Each full-bridge x (A or B) has:
+ *   - PWM1x      : speed. LOW = both low-sides on (brake), HIGH = drive
+ *   - PHx        : direction (board net "GPIOx")
+ *   - EN/nFAULTx : open-drain enable input + fault output. The board pulls it
+ *                  HIGH (39k to 3V3), so a bridge is ENABLED unless the MCU
+ *                  holds the line LOW. The driver pulls it LOW itself on
+ *                  UVLO, overcurrent and thermal shutdown.
+ * nSTDBY is tied high on the board: CN2 carries no global enable and no
+ * separate fault pin.
+ *
+ * Motor Channels (CN4 / CN5 terminal order is 2A, 1A, 1B, 2B):
+ *   - Motor 1 (M1): Front-Left  (FL) - U2 bridge A - CN4 terminals 2A + 1A
+ *   - Motor 2 (M2): Front-Right (FR) - U2 bridge B - CN4 terminals 1B + 2B
+ *   - Motor 3 (M3): Rear-Left   (RL) - U3 bridge A - CN5 terminals 2A + 1A
+ *   - Motor 4 (M4): Rear-Right  (RR) - U3 bridge B - CN5 terminals 1B + 2B
+ *   Never wire a motor 1A-1B or 2A-2B: that straddles two different bridges.
  *
  * Voltage Limits:
- *   - Motor Supply (VIN): 5.0 V to 48.0 V Max (Typical: 7.4V - 12.0V Battery)
- *   - Logic Supply: 3.3 V from Nucleo 3V3
+ *   - Motor Supply (CN3): outputs stay off below the 5.2 V (typ) UVLO threshold,
+ *     48.0 V Max (Typical: 7.4V - 12.0V Battery)
+ *   - Logic Supply: 3.3 V from Nucleo 3V3 (CN2 pin 1)
  *   - Maximum Peak Current per Bridge: 4.5 A (continuous rating: 2.5 A per motor)
  *
  * SAFETY RULE: NEVER CONNECT MOTOR BATTERY DIRECTLY TO NUCLEO 5V OR 3V3!
@@ -64,81 +76,58 @@ extern "C" {
 #define MOTOR_PWM_PERIOD_TICKS        1600UL      /* 32 MHz / 20 kHz = 1600 ticks */
 #define MOTOR_PWM_MAX_DUTY            MOTOR_PWM_PERIOD_TICKS
 
-/* Motor 1: Front-Left (PWM: PB4 / TIM3_CH1, DIR: PC0) */
+/* Motor 1: Front-Left, U2 bridge A
+ * (PWM: PB4 / TIM3_CH1 -> CN2.32, PH: PC0 -> CN2.23, EN/nFAULT: PC4 -> CN2.13) */
 #define MOTOR1_PWM_GPIO_PORT          GPIOB
 #define MOTOR1_PWM_PIN                GPIO_PIN_4
 #define MOTOR1_PWM_CHANNEL            TIM_CHANNEL_1
 #define MOTOR1_DIR_GPIO_PORT          GPIOC
 #define MOTOR1_DIR_PIN                GPIO_PIN_0
+#define MOTOR1_EN_PIN                 GPIO_PIN_4
 
-/* Motor 2: Front-Right (PWM: PB5 / TIM3_CH2, DIR: PC1) */
+/* Motor 2: Front-Right, U2 bridge B
+ * (PWM: PB5 / TIM3_CH2 -> CN2.33, PH: PC1 -> CN2.24, EN/nFAULT: PC5 -> CN2.15) */
 #define MOTOR2_PWM_GPIO_PORT          GPIOB
 #define MOTOR2_PWM_PIN                GPIO_PIN_5
 #define MOTOR2_PWM_CHANNEL            TIM_CHANNEL_2
 #define MOTOR2_DIR_GPIO_PORT          GPIOC
 #define MOTOR2_DIR_PIN                GPIO_PIN_1
+#define MOTOR2_EN_PIN                 GPIO_PIN_5
 
-/* Motor 3: Rear-Left (PWM: PB0 / TIM3_CH3, DIR: PC2) */
+/* Motor 3: Rear-Left, U3 bridge A
+ * (PWM: PB0 / TIM3_CH3 -> CN2.31, PH: PC2 -> CN2.19, EN/nFAULT: PC6 -> CN2.16) */
 #define MOTOR3_PWM_GPIO_PORT          GPIOB
 #define MOTOR3_PWM_PIN                GPIO_PIN_0
 #define MOTOR3_PWM_CHANNEL            TIM_CHANNEL_3
 #define MOTOR3_DIR_GPIO_PORT          GPIOC
 #define MOTOR3_DIR_PIN                GPIO_PIN_2
+#define MOTOR3_EN_PIN                 GPIO_PIN_6
 
-/* Motor 4: Rear-Right (PWM: PB1 / TIM3_CH4, DIR: PC3) */
+/* Motor 4: Rear-Right, U3 bridge B
+ * (PWM: PB1 / TIM3_CH4 -> CN2.36, PH: PC3 -> CN2.21, EN/nFAULT: PC8 -> CN2.18) */
 #define MOTOR4_PWM_GPIO_PORT          GPIOB
 #define MOTOR4_PWM_PIN                GPIO_PIN_1
 #define MOTOR4_PWM_CHANNEL            TIM_CHANNEL_4
 #define MOTOR4_DIR_GPIO_PORT          GPIOC
 #define MOTOR4_DIR_PIN                GPIO_PIN_3
+#define MOTOR4_EN_PIN                 GPIO_PIN_8
 
-/* Motor Driver Global Enable / Standby Pin (Active High): PC4 */
-#define MOTOR_ENABLE_GPIO_PORT        GPIOC
-#define MOTOR_ENABLE_PIN              GPIO_PIN_4
+/* Bridge EN/nFAULT lines (open-drain, one per motor, all on GPIOC).
+ * Released = bridge enabled, driven low = outputs high-Z. */
+#define MOTOR_EN_GPIO_PORT            GPIOC
+#define MOTOR_EN_ALL_PINS             (MOTOR1_EN_PIN | MOTOR2_EN_PIN | MOTOR3_EN_PIN | MOTOR4_EN_PIN)
 
-/* Motor Driver Fault Input Pin (Active Low open-drain with pull-up): PC5 */
-#define MOTOR_FAULT_GPIO_PORT         GPIOC
-#define MOTOR_FAULT_PIN               GPIO_PIN_5
+/* A released EN/nFAULT line rises through 39k / 10nF on the RBT01: ignore it for
+ * this long after enabling, then require repeated low samples to flag a fault */
+#define MOTOR_FAULT_BLANKING_MS       10UL
+#define MOTOR_FAULT_DEBOUNCE_SAMPLES  3U
 
 /* Acceleration / Deceleration Ramping Parameters */
 #define MOTOR_RAMP_STEP_PER_MS        2.0f        /* Max % change per millisecond */
 #define MOTOR_DEADBAND_PERCENT        4.0f        /* Deadband below which PWM is 0 */
 
 /* =============================================================================
- * 3. AUDIO SYSTEM: MAX98357A I2S CLASS-D AMPLIFIER
- * =============================================================================
- * The MAX98357A is a 3.2W digital Class-D audio amplifier receiving I2S audio.
- *
- * Connections to Nucleo-L073RZ (I2S2 / SPI2 peripheral):
- *   - BCLK (Bit Clock):   PB13 (I2S2_CK)
- *   - LRC / WS (Word):    PB12 (I2S2_WS)
- *   - DIN (Data In):      PB15 (I2S2_SD)
- *   - VIN:                +5V (from Nucleo 5V pin)
- *   - GND:                Common Ground
- *   - GAIN:               GND (9 dB) or Open (15 dB)
- *   - SD_MODE:            Open (Stereo Mix to Mono)
- *
- * Audio Synthesis Specs:
- *   - Sampling Rate: 16000 Hz (16 kHz, 16-bit Mono/Stereo)
- *   - DMA Ping-Pong Buffer: 256 samples (128 samples per half-buffer)
- * =============================================================================
- */
-#define AUDIO_SAMPLE_RATE_HZ          16000UL
-#define AUDIO_BUFFER_SIZE_SAMPLES     256         /* Ping-pong: 128 half-buffer */
-#define AUDIO_NUM_CHANNELS            2           /* I2S stereo frame format */
-
-#define AUDIO_I2S_INSTANCE            SPI2
-#define AUDIO_I2S_CLK_ENABLE()        __HAL_RCC_SPI2_CLK_ENABLE()
-
-#define AUDIO_I2S_WS_PORT             GPIOB
-#define AUDIO_I2S_WS_PIN              GPIO_PIN_12
-#define AUDIO_I2S_CK_PORT             GPIOB
-#define AUDIO_I2S_CK_PIN              GPIO_PIN_13
-#define AUDIO_I2S_SD_PORT             GPIOB
-#define AUDIO_I2S_SD_PIN              GPIO_PIN_15
-
-/* =============================================================================
- * 4. BLUETOOTH CONNECTIVITY
+ * 3. BLUETOOTH CONNECTIVITY
  * =============================================================================
  * Supported interfaces:
  *   A) ST X-NUCLEO-IDB05A2 BLE Shield (BlueNRG-M0 / SPBTLE-1S via SPI1)
@@ -182,7 +171,7 @@ extern "C" {
 #define IDB05A2_RST_PIN               GPIO_PIN_8  /* Arduino D7 */
 
 /* =============================================================================
- * 5. USER INTERFACE & DIAGNOSTICS (NUCLEO-L073RZ)
+ * 4. USER INTERFACE & DIAGNOSTICS (NUCLEO-L073RZ)
  * =============================================================================
  */
 #define USER_LED_PORT                 GPIOB
@@ -191,7 +180,7 @@ extern "C" {
 #define USER_BUTTON_PIN               GPIO_PIN_13 /* Nucleo Blue User Button B1 */
 
 /* =============================================================================
- * 6. HARDWARE SAFETY & TIMEOUT PARAMETERS
+ * 5. HARDWARE SAFETY & TIMEOUT PARAMETERS
  * =============================================================================
  */
 #define SAFETY_COMM_TIMEOUT_MS        1500UL      /* Stop motor if no command for 1.5s */

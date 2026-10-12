@@ -23,9 +23,8 @@ void Debug_Init(void)
 void Debug_PrintBanner(void)
 {
     Bluetooth_Send("\r\n======================================================\r\n");
-    Bluetooth_Send(" STM32L073RZ RACECAR DEMONSTRATOR WITH SOUND ENGINE \r\n");
+    Bluetooth_Send(" STM32L073RZ RACECAR DEMONSTRATOR                   \r\n");
     Bluetooth_Send(" Motor Driver: ST X-STM32MP-RBT01 (Dual STSPIN948)    \r\n");
-    Bluetooth_Send(" Class-D Amp : MAX98357A I2S 3.2W                    \r\n");
     Bluetooth_Send(" Wireless    : X-NUCLEO-IDB05A2 / UART Bluetooth     \r\n");
     Bluetooth_Send(" Mecanum 4WD : Active Holonomic Kinematics           \r\n");
     Bluetooth_Send(" Type 'HELP' for command list.                       \r\n");

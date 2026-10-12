@@ -302,7 +302,13 @@
         log("Searching for RACECAR BLE device...");
         bleDevice = await navigator.bluetooth.requestDevice({
           acceptAllDevices: true,
-          optionalServices: [SERVICE_UUID, "0000fe80-0000-1000-8000-00805f9b34fb"]
+          optionalServices: [
+            SERVICE_UUID,
+            "0000fe80-0000-1000-8000-00805f9b34fb",
+            "00000000-0001-11e1-9ab4-0002a5d5c51b",
+            "00000000-000e-11e1-9ab4-0002a5d5c51b",
+            "00000000-000f-11e1-9ab4-0002a5d5c51b"
+          ]
         });
 
         bleDevice.addEventListener('gattserverdisconnected', onDisconnected);
@@ -311,16 +317,24 @@
 
         log("Discovering services...");
         const services = await server.getPrimaryServices();
-        let targetService = services[0];
+        txChar = null;
+        rxChar = null;
 
-        const chars = await targetService.getCharacteristics();
-        for (const c of chars) {
-          if (c.properties.write || c.properties.writeWithoutResponse) txChar = c;
-          if (c.properties.notify || c.properties.read) {
-            rxChar = c;
-            await rxChar.startNotifications();
-            rxChar.addEventListener('characteristicvaluechanged', onDataReceived);
+        for (const s of services) {
+          const chars = await s.getCharacteristics();
+          for (const c of chars) {
+            if ((c.properties.write || c.properties.writeWithoutResponse) && !txChar) {
+              txChar = c;
+              log("Found TX characteristic: " + c.uuid);
+            }
+            if ((c.properties.notify || c.properties.indicate) && !rxChar) {
+              rxChar = c;
+              await rxChar.startNotifications();
+              rxChar.addEventListener('characteristicvaluechanged', onDataReceived);
+              log("Found RX characteristic: " + c.uuid);
+            }
           }
+          if (txChar && rxChar) break;
         }
 
         document.getElementById("btn-conn").innerText = "DISCONNECT";

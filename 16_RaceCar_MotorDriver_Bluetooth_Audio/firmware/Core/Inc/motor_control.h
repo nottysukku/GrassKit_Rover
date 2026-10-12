@@ -45,6 +45,10 @@ typedef struct {
     float overall_strafe;     /* -100.0f to 100.0f */
     bool fault_detected;
     bool estop_active;
+    bool bridges_enabled;     /* EN/nFAULT lines released (power stages active) */
+    uint8_t fault_mask;       /* Bit n set = driver fault on motor n+1 */
+    uint8_t fault_samples[4]; /* Low-sample counters for EN/nFAULT debounce */
+    uint32_t fault_blanking_ms;
 } MotorControl_t;
 
 /* Public API */
@@ -65,6 +69,7 @@ MotorState_t Motor_GetState(void);
 float Motor_GetThrottle(void);
 float Motor_GetMotorSpeed(uint8_t motor_id);
 bool Motor_IsFaultActive(void);
+uint8_t Motor_GetFaultMask(void);
 
 #ifdef __cplusplus
 }

@@ -9,7 +9,6 @@
 #include "safety.h"
 #include "motor_control.h"
 #include "engine_model.h"
-#include "audio_engine.h"
 #include "bluetooth.h"
 #include <string.h>
 
@@ -71,7 +70,6 @@ void Safety_TriggerEmergencyStop(void)
     g_safety.estop_latched = true;
     Motor_EmergencyStop();
     Engine_SetThrottle(0.0f);
-    Audio_SetMute(true);
 }
 
 void Safety_ResetEmergencyStop(void)
@@ -80,7 +78,6 @@ void Safety_ResetEmergencyStop(void)
     g_safety.comm_timeout_occurred = false;
     g_safety.last_heartbeat_ms = HAL_GetTick();
     Motor_ResetFault();
-    Audio_SetMute(false);
 }
 
 bool Safety_IsEmergencyStopActive(void)

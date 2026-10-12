@@ -6,7 +6,6 @@ Race Car Demonstrator - PC & Bluetooth Control Application
 Target Hardware:
   - Controller: STM32 NUCLEO-L073RZ
   - Motor Driver: ST X-STM32MP-RBT01 (Dual STSPIN948, 4 DC Motors, Mecanum)
-  - Audio: MAX98357A I2S Class-D Mono Amplifier + Speaker
   - Wireless: X-NUCLEO-IDB05A2 / Bluetooth UART / ST-LINK VCP
 
 Features:
@@ -38,7 +37,7 @@ except ImportError:
 class RaceCarControllerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("🏎️ STM32 Race Car & Mecanum Sound Demonstrator")
+        self.root.title("🏎️ STM32 Race Car & Mecanum Demonstrator")
         self.root.geometry("980x740")
         self.root.configure(bg="#121216")
 
@@ -93,7 +92,7 @@ class RaceCarControllerApp:
         right_col.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=(6, 0))
 
         # --- LEFT COLUMN: TACHOMETER & ENGINE DASHBOARD ---
-        tk.Label(left_col, text="RACE CAR ENGINE SOUND DASHBOARD", fg="#58a6ff", bg="#181a20", font=("Segoe UI", 12, "bold")).pack(anchor=tk.W)
+        tk.Label(left_col, text="RACE CAR ENGINE DASHBOARD", fg="#58a6ff", bg="#181a20", font=("Segoe UI", 12, "bold")).pack(anchor=tk.W)
 
         # Tachometer Canvas Gauge
         self.tacho_canvas = tk.Canvas(left_col, width=320, height=220, bg="#121216", highlightthickness=0)

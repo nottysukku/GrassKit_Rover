@@ -3,7 +3,7 @@
 See `docs/bluetooth_protocol.md` for complete specification.
 
 ## Core Commands Quick Table:
-- `START` - Enable motor driver and sound
+- `START` - Enable motor driver
 - `STOP` - Graceful stop
 - `BRAKE` - Electric active brake
 - `ESTOP` - Emergency stop (requires `RESET`)

@@ -26,7 +26,6 @@ typedef struct {
     bool is_shifting;
     uint32_t shift_timer_ms;
     bool rev_limiter_active;
-    bool blow_off_valve_fired;
 } EngineModel_t;
 
 void Engine_Init(void);
@@ -45,7 +44,6 @@ uint8_t Engine_GetGear(void);
 float Engine_GetBoost(void);
 bool Engine_IsShifting(void);
 bool Engine_IsRevLimiter(void);
-bool Engine_ConsumeBOVTrigger(void);
 
 #ifdef __cplusplus
 }

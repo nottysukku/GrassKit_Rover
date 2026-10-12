@@ -1,6 +1,6 @@
 # Hardware Pinout Mapping
 
-This document details the verified pin connections between the **STM32 NUCLEO-L073RZ** microcontroller, the **ST X-STM32MP-RBT01** motor driver board, the **MAX98357A** I2S Class-D audio amplifier, and the **ST X-NUCLEO-IDB05A2** / UART Bluetooth module.
+This document details the verified pin connections between the **STM32 NUCLEO-L073RZ** microcontroller, the **ST X-STM32MP-RBT01** motor driver board and the **ST X-NUCLEO-IDB05A2** / UART Bluetooth module.
 
 ---
 
@@ -8,19 +8,18 @@ This document details the verified pin connections between the **STM32 NUCLEO-L0
 
 | MCU Pin | Connector & Pin | Peripheral / AF | Function / Signal | Connected Target Board / Pin | Logic Voltage | Signal Dir | Safety / Notes |
 |:---|:---|:---|:---|:---|:---|:---|:---|
-| **PB4** | Morpho CN7.19 / D5 | TIM3_CH1 (AF2) | Motor 1 PWM (FL) | X-STM32MP-RBT01 (40-pin Pin 12 / PWM0) | 3.3 V | Output | 20 kHz ultrasonic PWM |
-| **PB5** | Morpho CN7.13 / D4 | TIM3_CH2 (AF2) | Motor 2 PWM (FR) | X-STM32MP-RBT01 (40-pin Pin 33 / PWM1) | 3.3 V | Output | 20 kHz ultrasonic PWM |
-| **PB0** | Morpho CN10.31 / A3 | TIM3_CH3 (AF2) | Motor 3 PWM (RL) | X-STM32MP-RBT01 (40-pin Pin 35 / PWM) | 3.3 V | Output | 20 kHz ultrasonic PWM |
-| **PB1** | Morpho CN10.29 / - | TIM3_CH4 (AF2) | Motor 4 PWM (RR) | X-STM32MP-RBT01 (40-pin Pin 32 / PWM) | 3.3 V | Output | 20 kHz ultrasonic PWM |
-| **PC0** | Morpho CN7.38 / A5 | GPIO_Output | Motor 1 DIR (FL) | X-STM32MP-RBT01 (40-pin Pin 11 / GPIO17) | 3.3 V | Output | Direction control |
-| **PC1** | Morpho CN7.36 / A4 | GPIO_Output | Motor 2 DIR (FR) | X-STM32MP-RBT01 (40-pin Pin 13 / GPIO27) | 3.3 V | Output | Direction control |
-| **PC2** | Morpho CN7.34 / - | GPIO_Output | Motor 3 DIR (RL) | X-STM32MP-RBT01 (40-pin Pin 15 / GPIO22) | 3.3 V | Output | Direction control |
-| **PC3** | Morpho CN7.32 / - | GPIO_Output | Motor 4 DIR (RR) | X-STM32MP-RBT01 (40-pin Pin 16 / GPIO23) | 3.3 V | Output | Direction control |
-| **PC4** | Morpho CN10.34 / - | GPIO_Output | Motor Driver EN / STBY | X-STM32MP-RBT01 (40-pin Pin 7 / GPIO4) | 3.3 V | Output | Active HIGH enable, LOW=Standby |
-| **PC5** | Morpho CN10.6 / - | GPIO_Input (Pull-Up) | Motor Driver FAULT | X-STM32MP-RBT01 (40-pin Pin 29 / GPIO5) | 3.3 V | Input | Active LOW open-drain fault report |
-| **PB12** | Morpho CN10.16 / - | SPI2_NSS (AF0) | I2S2_WS (Word Select / LRC) | MAX98357A LRC / WSEL | 3.3 V | Output | 16 kHz audio frame sync |
-| **PB13** | Morpho CN10.30 / - | SPI2_SCK (AF0) | I2S2_CK (Bit Clock) | MAX98357A BCLK | 3.3 V | Output | Audio bit clock (512 kHz) |
-| **PB15** | Morpho CN10.26 / - | SPI2_MOSI (AF0) | I2S2_SD (Serial Data) | MAX98357A DIN | 3.3 V | Output | 16-bit PCM audio stream |
+| **PB4** | Morpho CN10.27 / D5 | TIM3_CH1 (AF2) | Motor 1 PWM (FL) | X-STM32MP-RBT01 CN2 Pin 32 (`STSPIN948_1_PWM1A`) | 3.3 V | Output | 20 kHz ultrasonic PWM |
+| **PB5** | Morpho CN10.29 / D4 | TIM3_CH2 (AF4) | Motor 2 PWM (FR) | X-STM32MP-RBT01 CN2 Pin 33 (`STSPIN948_1_PWM1B`) | 3.3 V | Output | 20 kHz ultrasonic PWM |
+| **PB0** | Morpho CN7.34 / A3 | TIM3_CH3 (AF2) | Motor 3 PWM (RL) | X-STM32MP-RBT01 CN2 Pin 31 (`STSPIN948_2_PWM1A`) | 3.3 V | Output | 20 kHz ultrasonic PWM |
+| **PB1** | Morpho CN10.24 / - | TIM3_CH4 (AF2) | Motor 4 PWM (RR) | X-STM32MP-RBT01 CN2 Pin 36 (`STSPIN948_2_PWM1B`) | 3.3 V | Output | 20 kHz ultrasonic PWM |
+| **PC0** | Morpho CN7.38 / A5 | GPIO_Output | Motor 1 DIR (FL) | X-STM32MP-RBT01 CN2 Pin 23 (`STSPIN948_1_GPIOA` = PHA) | 3.3 V | Output | Direction (phase) control |
+| **PC1** | Morpho CN7.36 / A4 | GPIO_Output | Motor 2 DIR (FR) | X-STM32MP-RBT01 CN2 Pin 24 (`STSPIN948_1_GPIOB` = PHB) | 3.3 V | Output | Direction (phase) control |
+| **PC2** | Morpho CN7.35 / - | GPIO_Output | Motor 3 DIR (RL) | X-STM32MP-RBT01 CN2 Pin 19 (`STSPIN948_2_GPIOA` = PHA) | 3.3 V | Output | Direction (phase) control |
+| **PC3** | Morpho CN7.37 / - | GPIO_Output | Motor 4 DIR (RR) | X-STM32MP-RBT01 CN2 Pin 21 (`STSPIN948_2_GPIOB` = PHB) | 3.3 V | Output | Direction (phase) control |
+| **PC4** | Morpho CN10.34 / - | GPIO_Output (Open-Drain) | Motor 1 EN / nFAULT | X-STM32MP-RBT01 CN2 Pin 13 (`STSPIN948_1_ENA_nFAULTA`) | 3.3 V | Bidirectional | LOW = bridge off (high-Z); released = enabled; read back LOW = driver fault |
+| **PC5** | Morpho CN10.6 / - | GPIO_Output (Open-Drain) | Motor 2 EN / nFAULT | X-STM32MP-RBT01 CN2 Pin 15 (`STSPIN948_1_ENA_nFAULTB`) | 3.3 V | Bidirectional | Same as above |
+| **PC6** | Morpho CN10.4 / - | GPIO_Output (Open-Drain) | Motor 3 EN / nFAULT | X-STM32MP-RBT01 CN2 Pin 16 (`STSPIN948_2_ENA_nFAULTA`) | 3.3 V | Bidirectional | Same as above |
+| **PC8** | Morpho CN10.2 / - | GPIO_Output (Open-Drain) | Motor 4 EN / nFAULT | X-STM32MP-RBT01 CN2 Pin 18 (`STSPIN948_2_ENA_nFAULTB`) | 3.3 V | Bidirectional | Same as above |
 | **PA2** | Morpho CN10.35 / D1 | USART2_TX (AF4) | ST-LINK VCP TX | PC USB / Virtual COM Port | 3.3 V | Output | 115200 Baud Console / Telemetry |
 | **PA3** | Morpho CN10.37 / D0 | USART2_RX (AF4) | ST-LINK VCP RX | PC USB / Virtual COM Port | 3.3 V | Input | 115200 Baud Command Receiver |
 | **PA9** | Morpho CN10.21 / D8 | USART1_TX (AF4) | Aux Bluetooth TX | External BT Module RX (HC-05/HM-10) | 3.3 V | Output | 115200 Baud |
@@ -33,46 +32,66 @@ This document details the verified pin connections between the **STM32 NUCLEO-L0
 | **PA8** | Arduino CN9.8 / D7 | GPIO_Output | BLE Module Reset | X-NUCLEO-IDB05A2 D7 / RST | 3.3 V | Output | Active LOW hardware reset |
 | **PB2** | Morpho CN10.22 / - | GPIO_Output | Status Heartbeat LED | Onboard Status Indicator | 3.3 V | Output | Flashes to indicate run/idle/estop |
 | **PC13** | Morpho CN7.23 / B1 | GPIO_Input | Hardware E-STOP Button | Nucleo Blue User Pushbutton B1 | 3.3 V | Input | Active LOW physical safety button |
-| **5V** | Arduino CN6.5 / Power | Power Rail (+5V) | Main +5V Supply | MAX98357A VIN | 5.0 V | Power | Sourced from Nucleo 5V regulator |
 | **3V3**| Arduino CN6.4 / Power | Power Rail (+3.3V) | Logic VDD | X-STM32MP-RBT01 40-pin Pin 1 | 3.3 V | Power | Logic reference supply |
-| **GND**| Arduino / Morpho GND | Common Ground | System GND | ALL BOARDS (RBT01, MAX98357A, BT) | 0.0 V | Common | **CRITICAL: ALL GROUNDS MUST BE TIED** |
+| **GND**| Arduino / Morpho GND | Common Ground | System GND | ALL BOARDS (RBT01, BT) | 0.0 V | Common | **CRITICAL: ALL GROUNDS MUST BE TIED** |
 
 ---
 
 ## 2. ST X-STM32MP-RBT01 (XMPSRBT01A) Header Mapping
 
-The board provides a 40-pin standard Raspberry Pi-compatible header (J...):
+The board's 40-pin connector is **CN2**. Signal names below are taken from ST
+user manual **UM3482 Rev 1** (Table 11 and schematic sheets 3–5 of 10). The
+board is designed for an STM32MP1/MP2 Discovery kit, so the header does **not**
+follow Raspberry Pi GPIO function names: most pins belong to the on-board
+sensors and LEDs.
 
-| 40-Pin Header Pin | Signal Name | Connected Nucleo Pin | Function |
+Find pin 1 by its square solder pad. Odd pins (1, 3 … 39) are in the same row
+as pin 1, even pins (2, 4 … 40) in the other row.
+
+| CN2 Pin | RBT01 Signal | Connected Nucleo Pin | Function |
 |:---|:---|:---|:---|
-| **Pin 1** | 3.3V VDD | Nucleo 3V3 | Logic supply reference for STSPIN948 & sensors |
-| **Pin 6, 9, 14, 20**| GND | Nucleo GND | Common ground reference |
-| **Pin 7** | GPIO4 | Nucleo PC4 | STSPIN948 Enable / Standby (Active High) |
-| **Pin 11** | GPIO17 | Nucleo PC0 | Motor 1 Direction (M1 DIR) |
-| **Pin 12** | GPIO18 (PWM0) | Nucleo PB4 | Motor 1 PWM Speed (M1 PWM) |
-| **Pin 13** | GPIO27 | Nucleo PC1 | Motor 2 Direction (M2 DIR) |
-| **Pin 15** | GPIO22 | Nucleo PC2 | Motor 3 Direction (M3 DIR) |
-| **Pin 16** | GPIO23 | Nucleo PC3 | Motor 4 Direction (M4 DIR) |
-| **Pin 29** | GPIO5 | Nucleo PC5 | Motor Driver Fault Line (Active Low Open-Drain) |
-| **Pin 32** | GPIO12 (PWM0) | Nucleo PB1 | Motor 4 PWM Speed (M4 PWM) |
-| **Pin 33** | GPIO13 (PWM1) | Nucleo PB5 | Motor 2 PWM Speed (M2 PWM) |
-| **Pin 35** | GPIO19 (PWM1) | Nucleo PB0 | Motor 3 PWM Speed (M3 PWM) |
+| **Pin 1** (or 17) | 3V3 | Nucleo 3V3 | Logic supply for both STSPIN948 and the sensors |
+| **Pin 6** (also 9, 14, 20, 25, 30, 34, 39) | GND | Nucleo GND | Common ground reference |
+| **Pin 13** | `STSPIN948_1_ENA_nFAULTA` | Nucleo PC4 | Motor 1 enable / fault (open-drain, 39 kΩ pull-up on board) |
+| **Pin 15** | `STSPIN948_1_ENA_nFAULTB` | Nucleo PC5 | Motor 2 enable / fault |
+| **Pin 16** | `STSPIN948_2_ENA_nFAULTA` | Nucleo PC6 | Motor 3 enable / fault |
+| **Pin 18** | `STSPIN948_2_ENA_nFAULTB` | Nucleo PC8 | Motor 4 enable / fault |
+| **Pin 19** | `STSPIN948_2_GPIOA` (PHA) | Nucleo PC2 | Motor 3 direction |
+| **Pin 21** | `STSPIN948_2_GPIOB` (PHB) | Nucleo PC3 | Motor 4 direction |
+| **Pin 23** | `STSPIN948_1_GPIOA` (PHA) | Nucleo PC0 | Motor 1 direction |
+| **Pin 24** | `STSPIN948_1_GPIOB` (PHB) | Nucleo PC1 | Motor 2 direction |
+| **Pin 31** | `STSPIN948_2_PWM1A` | Nucleo PB0 | Motor 3 PWM speed |
+| **Pin 32** | `STSPIN948_1_PWM1A` | Nucleo PB4 | Motor 1 PWM speed |
+| **Pin 33** | `STSPIN948_1_PWM1B` | Nucleo PB5 | Motor 2 PWM speed |
+| **Pin 36** | `STSPIN948_2_PWM1B` | Nucleo PB1 | Motor 4 PWM speed |
+
+### Pins that must stay unconnected
+
+| CN2 Pin | RBT01 Signal | Why |
+|:---|:---|:---|
+| 7, 8, 10, 11, 35 | `IIS2MDC_INT_DRDY`, `ISM330DHC_INT1`, `ISM330DHC_INT2`, `LPS22HH_INT_DRDY`, `VL53L5CX_INT` | Sensor interrupt **outputs**. Driving them from an MCU output shorts two outputs together. |
+| 12, 22, 26, 29, 37 | `GPIO_LED3`, `GPIO_LED5`, `GPIO_LED4`, `GPIO_LED2`, `GPIO_LED1` | Active-low on-board LEDs (not used by this firmware) |
+| 3, 5, 27, 28, 38, 40 | I2C bus, ID EEPROM, ToF reset / LPn | Sensor bus (not used by this firmware) |
+| 2, 4 | 5V0 | Not needed; never connect to the motor supply |
+
+### STSPIN948 control logic (dual independent full-bridge mode)
+
+| ENx | PWM1x | PHx | OUT1x | OUT2x | Result |
+|:---:|:---:|:---:|:---:|:---:|:---|
+| 0 | X | X | High-Z | High-Z | Bridge off, motor coasts |
+| 1 | 0 | X | Low-side on | Low-side on | Brake |
+| 1 | 1 | 1 | High-side on | Low-side on | Drive, current 1x → 2x |
+| 1 | 1 | 0 | Low-side on | High-side on | Drive, current 2x → 1x |
+
+`ENx` is pulled **HIGH on the board**: a bridge is enabled whenever nothing holds
+its `EN/nFAULT` line low, and it then drives at full voltage as soon as its
+`PWM1x` input is high and the motor supply is above the 5.2 V (typ) UVLO
+threshold. The firmware therefore holds all four lines low at idle.
 
 > [!NOTE]
-> `[VERIFY HARDWARE]` Board Jumper Note:
-> The X-STM32MP-RBT01 has configuration jumpers J1, J2, and J15. Verify that jumpers J1/J2 match the PWM/DIR mode rather than parallel bridge mode. Trimpots R70 and R71 set the current limit reference threshold (VREF) for the two STSPIN948 ICs.
-
----
-
-## 3. MAX98357A Class-D Audio Amplifier Connections
-
-| MAX98357A Pin | Connected Nucleo Pin | Description |
-|:---|:---|:---|
-| **VIN** | Nucleo +5V (CN6.5) | Amplifier power supply (2.5 V - 5.5 V) |
-| **GND** | Nucleo GND (CN6.6) | Power & signal ground |
-| **BCLK** | Nucleo PB13 (I2S2_CK) | I2S Bit Clock (512 kHz @ 16 kHz sample rate) |
-| **LRC / WSEL** | Nucleo PB12 (I2S2_WS) | Left/Right Frame Clock (16 kHz) |
-| **DIN** | Nucleo PB15 (I2S2_SD) | I2S Serial Audio Data |
-| **GAIN** | Nucleo GND (or leave open) | Tie to GND for 9 dB gain (recommended for low distortion) |
-| **SD_MODE** | Leave Open | Internal 100k pull-up outputs stereo mix (L+R)/2 to mono speaker |
-| **+ / - Outputs** | Speaker Terminals | 4 Ω or 8 Ω (3 W) speaker. **Do NOT ground either terminal!** |
+> Board configuration (all defaults are correct for this project):
+> - Mode jumpers **J6 / J7 / J8** (driver U2) and **J11 / J12 / J13** (driver U3) at
+>   `1-2 / 2-3 / 1-2` = MODE1 LOW, MODE2 HIGH, MODE3 LOW = dual independent
+>   full-bridge, fixed OFF-time. J1 only write-protects the ID EEPROM.
+> - Current-limit trimmers: **R51** (M1), **R55** (M2), **R71** (M3), **R76** (M4).
+>   See `docs/motor_control.md` for the VREF formula.

@@ -8,7 +8,6 @@
 #include "app.h"
 #include "motor_control.h"
 #include "engine_model.h"
-#include "audio_engine.h"
 #include "bluetooth.h"
 #include "command_parser.h"
 #include "safety.h"
@@ -31,12 +30,14 @@ void App_Init(void)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(USER_LED_PORT, &GPIO_InitStruct);
 
+    /* Motor outputs first: the RBT01 enables its bridges by default, so hold
+     * them disabled before the (slow) Bluetooth bring-up */
+    Motor_Init();
+
     /* Initialize sub-modules */
     Debug_Init();
     Bluetooth_Init();
-    Motor_Init();
     Engine_Init();
-    Audio_Init();
     Safety_Init();
     Command_Init();
 
@@ -44,7 +45,6 @@ void App_Init(void)
     Debug_PrintBanner();
     Debug_Log("STATUS:BOOT_OK\r\n");
     Debug_Log("STATUS:MOTOR_INIT_OK\r\n");
-    Debug_Log("STATUS:AUDIO_INIT_OK\r\n");
     Debug_Log("STATUS:BLUETOOTH_INIT_OK\r\n");
 
     s_last_loop_tick = HAL_GetTick();
@@ -72,17 +72,18 @@ void App_Run(void)
         float th = Motor_GetThrottle();
         Engine_Update(delta_ms, th);
 
-        /* 5. Update Audio parameters from engine model */
-        float rpm = Engine_GetRPM();
         bool shifting = Engine_IsShifting();
-        bool rev_lim = Engine_IsRevLimiter();
-        bool bov_pop = Engine_ConsumeBOVTrigger();
-        Audio_UpdateParameters(rpm, th, shifting, rev_lim, bov_pop);
 
-        /* 6. State Machine Synchronization */
+        /* 5. State Machine Synchronization */
         if (Safety_IsEmergencyStopActive()) {
             g_app_state = APP_STATE_ESTOP;
         } else if (Motor_IsFaultActive()) {
+            if (g_app_state != APP_STATE_FAULT) {
+                /* 1 = that motor's STSPIN948 bridge reports UVLO / overcurrent / overtemperature */
+                uint8_t mask = Motor_GetFaultMask();
+                Debug_Log("ALARM:DRIVER_FAULT:M1=%u,M2=%u,M3=%u,M4=%u\r\n",
+                          mask & 1U, (mask >> 1) & 1U, (mask >> 2) & 1U, (mask >> 3) & 1U);
+            }
             g_app_state = APP_STATE_FAULT;
         } else if (shifting) {
             g_app_state = APP_STATE_GEAR_SHIFT;
@@ -94,10 +95,10 @@ void App_Run(void)
             g_app_state = APP_STATE_IDLE;
         }
 
-        /* 7. Periodic telemetry logging */
+        /* 6. Periodic telemetry logging */
         Debug_UpdatePeriodic(delta_ms);
 
-        /* 8. Status Heartbeat LED Flash */
+        /* 7. Status Heartbeat LED Flash */
         s_led_timer_ms += delta_ms;
         uint32_t led_period = 500; /* 1 Hz flash in idle */
         if (g_app_state == APP_STATE_RUNNING) {

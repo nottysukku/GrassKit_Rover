@@ -14,8 +14,10 @@ This document provides in-depth technical analysis for each component of the rac
   - Integrated N-channel power MOSFETs with low RDS(on).
   - Maximum output voltage rating: **Up to 48 V DC**.
   - Current capability: **Up to 2.5 A continuous per motor** (4.5 A peak r.m.s. per bridge).
-  - Built-in adjustable current limiters using shunts `R050` (50 mΩ) and reference trimpots `R70`, `R71`.
-  - Protection features: Under-voltage lockout (UVLO), thermal shutdown, short-circuit protection, overcurrent protection with open-drain fault report line (`PC5`).
+  - Built-in adjustable current limiters using shunts `R050` (50 mΩ) and one reference trimmer per bridge (`R51`, `R55`, `R71`, `R76`).
+  - Protection features: Under-voltage lockout (UVLO, outputs off below 5.2 V typ), thermal shutdown, overcurrent protection. Faults are reported by pulling the bridge's own open-drain `EN/nFAULT` line low (`PC4`, `PC5`, `PC6`, `PC8`); there is no separate fault pin.
+  - Each `EN/nFAULT` line is pulled up on the board, so a bridge is enabled by default and must be held low by the MCU to switch it off.
+  - Configured by on-board jumpers (factory default) for dual independent full-bridge mode: per motor one PWM input, one phase (direction) input and one enable/fault line. See `hardware/pinout.md`.
 - **Power Terminal & Protection**:
   - Green 2-pin screw terminal marked `48V max` and `GND`.
   - Onboard 15 A blade fuse (`F1`) protecting the battery rail.
@@ -38,7 +40,6 @@ This document provides in-depth technical analysis for each component of the rac
   - EEPROM: 6 KB true data EEPROM
 - **Key Peripherals Configured**:
   - **TIM3**: 16-bit 4-channel General-Purpose Timer running at 20 kHz ultrasonic PWM for 4 motors.
-  - **SPI2 / I2S2**: Configured in I2S Master Transmit mode (Philips standard, 16-bit, 16 kHz) with DMA1 Channel 5 circular stream for real-time sound playback.
   - **USART2**: 115200 baud connected to ST-LINK Virtual COM Port for PC console and Python GUI telemetry.
   - **USART1**: 115200 baud connected to PA9/PA10 for external Bluetooth receiver.
   - **SPI1**: 8 MHz bus connected to X-NUCLEO-IDB05A2 BlueNRG-M0 BLE shield.
@@ -46,25 +47,7 @@ This document provides in-depth technical analysis for each component of the rac
 
 ---
 
-## 3. Class-D Audio Amplifier: MAX98357A
-
-- **Amplifier Topology**: Filterless digital Class-D mono audio amplifier with integrated DAC.
-- **Interface**: Standard digital I2S (BCLK, LRC, DIN). No Master Clock (MCLK) required.
-- **Output Power**:
-  - 3.2 W into 4 Ω load @ 5 V (10% THD+N).
-  - 1.8 W into 8 Ω load @ 5 V (10% THD+N).
-- **Supply Voltage**: 2.5 V to 5.5 V (powered directly from Nucleo +5V rail).
-- **Gain Selection**:
-  - Gain pin to GND: 9 dB (recommended to prevent clipping with high dynamic range race sounds).
-  - Gain pin via 100 kΩ to GND: 12 dB.
-  - Gain pin left open: 15 dB.
-- **Bridge-Tied Load (BTL)**:
-  - Both speaker outputs switch at high carrier frequencies (300 kHz).
-  - **Never tie either output to ground or another channel.**
-
----
-
-## 4. Bluetooth Wireless Interfaces
+## 3. Bluetooth Wireless Interfaces
 
 ### ST X-NUCLEO-IDB05A2
 - Module: `SPBTLE-1S` based on ST BlueNRG-M0 network processor.

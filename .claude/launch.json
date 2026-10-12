@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "racecar-test-page",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-u", "16_RaceCar_MotorDriver_Bluetooth_Audio/tools/web_serial_server.py"],
+      "port": 8080
+    }
+  ]
+}

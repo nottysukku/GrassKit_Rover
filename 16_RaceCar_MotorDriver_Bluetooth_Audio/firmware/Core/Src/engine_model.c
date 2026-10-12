@@ -103,10 +103,6 @@ void Engine_Update(uint32_t delta_ms, float physical_throttle)
                 g_engine.boost_pressure_bar = target_boost;
             }
         } else {
-            /* Throttle released while boost pressure was high -> Blow-Off Valve pop! */
-            if (g_engine.boost_pressure_bar > 0.45f && g_engine.throttle_input < 15.0f) {
-                g_engine.blow_off_valve_fired = true;
-            }
             g_engine.boost_pressure_bar -= 0.005f * (float)delta_ms;
             if (g_engine.boost_pressure_bar < 0.0f) {
                 g_engine.boost_pressure_bar = 0.0f;
@@ -198,13 +194,4 @@ bool Engine_IsShifting(void)
 bool Engine_IsRevLimiter(void)
 {
     return g_engine.rev_limiter_active;
-}
-
-bool Engine_ConsumeBOVTrigger(void)
-{
-    if (g_engine.blow_off_valve_fired) {
-        g_engine.blow_off_valve_fired = false;
-        return true;
-    }
-    return false;
 }

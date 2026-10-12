@@ -19,7 +19,6 @@ $cFiles = @(
     "$fw\Core\Src\app.c",
     "$fw\Core\Src\motor_control.c",
     "$fw\Core\Src\engine_model.c",
-    "$fw\Core\Src\audio_engine.c",
     "$fw\Core\Src\bluetooth.c",
     "$fw\Core\Src\command_parser.c",
     "$fw\Core\Src\safety.c",
@@ -41,7 +40,6 @@ $cFiles = @(
     "$fw\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_uart.c",
     "$fw\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_uart_ex.c",
     "$fw\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_spi.c",
-    "$fw\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_i2s.c",
     "$fw\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_flash.c",
     "$fw\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_flash_ex.c",
     "$fw\Drivers\STM32L0xx_HAL_Driver\Src\stm32l0xx_hal_exti.c"

@@ -11,7 +11,6 @@
 /* External Peripheral Handles */
 extern UART_HandleTypeDef huart1_bt;
 extern UART_HandleTypeDef huart2_debug;
-extern DMA_HandleTypeDef  hdma_spi2_tx;
 
 void NMI_Handler(void)
 {
@@ -50,12 +49,4 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
     HAL_UART_IRQHandler(&huart2_debug);
-}
-
-/**
-  * @brief Handles DMA1 Channel 4..7 (I2S Audio TX) interrupt.
-  */
-void DMA1_Channel4_5_6_7_IRQHandler(void)
-{
-    HAL_DMA_IRQHandler(&hdma_spi2_tx);
 }

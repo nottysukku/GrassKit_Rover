@@ -6,7 +6,6 @@
   * Target Hardware:
   *   - MCU: STM32L073RZ (NUCLEO-L073RZ)
   *   - Motor Driver: ST X-STM32MP-RBT01 (Dual STSPIN948, 4 DC Brushed Motors)
-  *   - Audio Amplifier: MAX98357A I2S Class-D Mono Amplifier
   *   - Bluetooth: ST X-NUCLEO-IDB05A2 / External UART Module
   *   - Chassis: 4-Wheel Mecanum Drive
   ******************************************************************************
@@ -25,7 +24,7 @@ int main(void)
     /* Configure the system clock to 32 MHz using HSI16 and PLL */
     SystemClock_Config();
 
-    /* Initialize Application Modules (Motors, Engine Model, Audio, Bluetooth, Safety) */
+    /* Initialize Application Modules (Motors, Engine Model, Bluetooth, Safety) */
     App_Init();
 
     /* Infinite loop */

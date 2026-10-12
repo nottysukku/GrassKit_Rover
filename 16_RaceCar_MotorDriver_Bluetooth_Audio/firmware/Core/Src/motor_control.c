@@ -13,9 +13,15 @@
 static MotorControl_t g_motor_ctrl;
 static TIM_HandleTypeDef htim3_motors;
 
+static const uint16_t s_motor_en_pins[4] = {
+    MOTOR1_EN_PIN, MOTOR2_EN_PIN, MOTOR3_EN_PIN, MOTOR4_EN_PIN
+};
+
 /* Private Helper Declarations */
 static void Motor_Hardware_Init_GPIO(void);
 static void Motor_Hardware_Init_TIM3(void);
+static void Motor_SetBridgesEnabled(bool enable);
+static bool Motor_CheckDriverFault(uint32_t delta_ms);
 static void Motor_ApplyPWMAndDirection(uint8_t id, float speed);
 static float Motor_Clamp(float val, float min_val, float max_val);
 
@@ -29,8 +35,8 @@ void Motor_Init(void)
     Motor_Hardware_Init_GPIO();
     Motor_Hardware_Init_TIM3();
 
-    /* Ensure motor driver is held in standby / disabled initially */
-    HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_PORT, MOTOR_ENABLE_PIN, GPIO_PIN_RESET);
+    /* Ensure all four bridges are held disabled (outputs high-Z) initially */
+    Motor_SetBridgesEnabled(false);
 
     g_motor_ctrl.state = MOTOR_STATE_IDLE;
 }
@@ -43,29 +49,26 @@ static void Motor_Hardware_Init_GPIO(void)
     __HAL_RCC_GPIOB_CLK_ENABLE();
     __HAL_RCC_GPIOC_CLK_ENABLE();
 
-    /* Direction Pins: PC0, PC1, PC2, PC3 Output Push-Pull */
+    /* Bridge EN/nFAULT Pins: PC4, PC5, PC6, PC8 Output Open-Drain.
+     * The RBT01 pulls each line to 3V3 (bridge enabled by default), so latch
+     * them low before switching to output mode. No internal pull: the on-board
+     * 39k / 10nF network sets the enable level and overcurrent retry time. */
+    HAL_GPIO_WritePin(MOTOR_EN_GPIO_PORT, MOTOR_EN_ALL_PINS, GPIO_PIN_RESET);
+    GPIO_InitStruct.Pin = MOTOR_EN_ALL_PINS;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(MOTOR_EN_GPIO_PORT, &GPIO_InitStruct);
+
+    /* Direction (PHx) Pins: PC0, PC1, PC2, PC3 Output Push-Pull with pull-down */
     GPIO_InitStruct.Pin = MOTOR1_DIR_PIN | MOTOR2_DIR_PIN | MOTOR3_DIR_PIN | MOTOR4_DIR_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
     /* All Direction outputs low initially */
     HAL_GPIO_WritePin(GPIOC, MOTOR1_DIR_PIN | MOTOR2_DIR_PIN | MOTOR3_DIR_PIN | MOTOR4_DIR_PIN, GPIO_PIN_RESET);
-
-    /* Motor Enable Pin: PC4 Output Push-Pull */
-    GPIO_InitStruct.Pin = MOTOR_ENABLE_PIN;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(MOTOR_ENABLE_GPIO_PORT, &GPIO_InitStruct);
-    HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_PORT, MOTOR_ENABLE_PIN, GPIO_PIN_RESET);
-
-    /* Motor Fault Pin: PC5 Input with Pull-Up */
-    GPIO_InitStruct.Pin = MOTOR_FAULT_PIN;
-    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_PULLUP;
-    HAL_GPIO_Init(MOTOR_FAULT_GPIO_PORT, &GPIO_InitStruct);
 }
 
 static void Motor_Hardware_Init_TIM3(void)
@@ -75,12 +78,18 @@ static void Motor_Hardware_Init_TIM3(void)
 
     MOTOR_PWM_TIMER_CLK_ENABLE();
 
-    /* Configure PB4 (CH1), PB5 (CH2), PB0 (CH3), PB1 (CH4) as TIM3 Alternate Function */
-    GPIO_InitStruct.Pin = MOTOR1_PWM_PIN | MOTOR2_PWM_PIN | MOTOR3_PWM_PIN | MOTOR4_PWM_PIN;
+    /* Configure PB4 (CH1), PB0 (CH3), PB1 (CH4) as TIM3 Alternate Function AF2 with pull-down */
+    GPIO_InitStruct.Pin = MOTOR1_PWM_PIN | MOTOR3_PWM_PIN | MOTOR4_PWM_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /* Configure PB5 (CH2) as TIM3 Alternate Function AF4 (STM32L0 TIM3_CH2 is AF4 on PB5,
+     * and only once the TIM3_OR remap below is set) */
+    GPIO_InitStruct.Pin = MOTOR2_PWM_PIN;
+    GPIO_InitStruct.Alternate = GPIO_AF4_TIM3;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     /* Timer Base Configuration: 32 MHz / 1 (Prescaler 0) = 32 MHz tick.
@@ -92,6 +101,10 @@ static void Motor_Hardware_Init_TIM3(void)
     htim3_motors.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim3_motors.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     HAL_TIM_PWM_Init(&htim3_motors);
+
+    /* PB5 (AF4) carries TIM22_CH2 by default: route TIM3_CH2 to it instead,
+     * otherwise Motor 2 never gets a PWM signal */
+    HAL_TIMEx_RemapConfig(&htim3_motors, TIM3_TI2_GPIOB5_AF4);
 
     /* Output Compare Configuration (PWM Mode 1, initial duty 0) */
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
@@ -111,13 +124,59 @@ static void Motor_Hardware_Init_TIM3(void)
     HAL_TIM_PWM_Start(&htim3_motors, TIM_CHANNEL_4);
 }
 
+/**
+ * @brief  Enable or disable all four full-bridges through their EN/nFAULT lines.
+ *         Releasing a line lets the RBT01 pull-up enable the bridge; driving it
+ *         low puts the bridge outputs in high-Z.
+ */
+static void Motor_SetBridgesEnabled(bool enable)
+{
+    if (enable && !g_motor_ctrl.bridges_enabled) {
+        g_motor_ctrl.fault_blanking_ms = MOTOR_FAULT_BLANKING_MS;
+        memset(g_motor_ctrl.fault_samples, 0, sizeof(g_motor_ctrl.fault_samples));
+    }
+
+    HAL_GPIO_WritePin(MOTOR_EN_GPIO_PORT, MOTOR_EN_ALL_PINS, enable ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    g_motor_ctrl.bridges_enabled = enable;
+}
+
+/**
+ * @brief  Sample the EN/nFAULT lines of the enabled bridges (called every 1 ms)
+ * @retval true if a driver is holding its line low (UVLO, overcurrent or
+ *         thermal shutdown); the affected motors are recorded in fault_mask
+ */
+static bool Motor_CheckDriverFault(uint32_t delta_ms)
+{
+    if (!g_motor_ctrl.bridges_enabled) {
+        return false; /* Lines are held low by the MCU itself */
+    }
+
+    if (g_motor_ctrl.fault_blanking_ms > delta_ms) {
+        g_motor_ctrl.fault_blanking_ms -= delta_ms;
+        return false;
+    }
+    g_motor_ctrl.fault_blanking_ms = 0;
+
+    for (int i = 0; i < 4; i++) {
+        if (HAL_GPIO_ReadPin(MOTOR_EN_GPIO_PORT, s_motor_en_pins[i]) == GPIO_PIN_RESET) {
+            if (++g_motor_ctrl.fault_samples[i] >= MOTOR_FAULT_DEBOUNCE_SAMPLES) {
+                g_motor_ctrl.fault_mask |= (uint8_t)(1U << i);
+            }
+        } else if (g_motor_ctrl.fault_samples[i] > 0) {
+            g_motor_ctrl.fault_samples[i]--;
+        }
+    }
+
+    return g_motor_ctrl.fault_mask != 0;
+}
+
 void Motor_Start(void)
 {
     if (g_motor_ctrl.estop_active) {
         return; /* Require explicit reset if e-stop was tripped */
     }
 
-    HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_PORT, MOTOR_ENABLE_PIN, GPIO_PIN_SET);
+    Motor_SetBridgesEnabled(true);
     g_motor_ctrl.state = MOTOR_STATE_RUNNING;
 }
 
@@ -148,7 +207,7 @@ void Motor_Brake(void)
 void Motor_EmergencyStop(void)
 {
     /* Instant hardware shutdown: Disable driver & set duty to 0 */
-    HAL_GPIO_WritePin(MOTOR_ENABLE_GPIO_PORT, MOTOR_ENABLE_PIN, GPIO_PIN_RESET);
+    Motor_SetBridgesEnabled(false);
 
     __HAL_TIM_SET_COMPARE(&htim3_motors, TIM_CHANNEL_1, 0);
     __HAL_TIM_SET_COMPARE(&htim3_motors, TIM_CHANNEL_2, 0);
@@ -169,6 +228,7 @@ void Motor_ResetFault(void)
 {
     g_motor_ctrl.estop_active = false;
     g_motor_ctrl.fault_detected = false;
+    g_motor_ctrl.fault_mask = 0;
     Motor_Stop();
 }
 
@@ -228,8 +288,8 @@ void Motor_SetDrive(float throttle, float steer, float strafe)
     g_motor_ctrl.motors[2].target_speed = Motor_Clamp(rl, -100.0f, 100.0f);
     g_motor_ctrl.motors[3].target_speed = Motor_Clamp(rr, -100.0f, 100.0f);
 
-    /* Auto-enable if positive throttle requested and in idle */
-    if (g_motor_ctrl.state == MOTOR_STATE_IDLE &&
+    /* Auto-enable if drive is requested while the bridges are idle or braked */
+    if (g_motor_ctrl.state != MOTOR_STATE_RUNNING &&
         (fabsf(fl) > 1.0f || fabsf(fr) > 1.0f || fabsf(rl) > 1.0f || fabsf(rr) > 1.0f)) {
         Motor_Start();
     }
@@ -251,15 +311,16 @@ void Motor_UpdateRamp(uint32_t delta_ms)
         return;
     }
 
-    /* Check hardware fault line (active low) */
-    if (HAL_GPIO_ReadPin(MOTOR_FAULT_GPIO_PORT, MOTOR_FAULT_PIN) == GPIO_PIN_RESET) {
+    /* Check driver fault lines (EN/nFAULTx held low by an enabled bridge) */
+    if (Motor_CheckDriverFault(delta_ms)) {
         g_motor_ctrl.fault_detected = true;
-        g_motor_ctrl.state = MOTOR_STATE_FAULT;
         Motor_EmergencyStop();
+        g_motor_ctrl.state = MOTOR_STATE_FAULT;
         return;
     }
 
     float max_step = MOTOR_RAMP_STEP_PER_MS * (float)delta_ms;
+    bool all_stopped = true;
 
     for (int i = 0; i < 4; i++) {
         float diff = g_motor_ctrl.motors[i].target_speed - g_motor_ctrl.motors[i].current_speed;
@@ -272,7 +333,16 @@ void Motor_UpdateRamp(uint32_t delta_ms)
             g_motor_ctrl.motors[i].current_speed -= max_step;
         }
 
+        if (g_motor_ctrl.motors[i].current_speed != 0.0f) {
+            all_stopped = false;
+        }
+
         Motor_ApplyPWMAndDirection(i, g_motor_ctrl.motors[i].current_speed);
+    }
+
+    /* Idle with every wheel ramped down: put the bridges back in high-Z */
+    if (g_motor_ctrl.state == MOTOR_STATE_IDLE && all_stopped && g_motor_ctrl.bridges_enabled) {
+        Motor_SetBridgesEnabled(false);
     }
 }
 
@@ -339,6 +409,11 @@ float Motor_GetMotorSpeed(uint8_t motor_id)
 bool Motor_IsFaultActive(void)
 {
     return g_motor_ctrl.fault_detected;
+}
+
+uint8_t Motor_GetFaultMask(void)
+{
+    return g_motor_ctrl.fault_mask;
 }
 
 static float Motor_Clamp(float val, float min_val, float max_val)

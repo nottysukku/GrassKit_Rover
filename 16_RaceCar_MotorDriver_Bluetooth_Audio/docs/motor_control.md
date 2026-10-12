@@ -6,23 +6,35 @@ This document details the motor control subsystem, STSPIN948 driver interface, a
 
 ## 1. STSPIN948 Dual Full-Bridge Motor Driver
 
-The **X-STM32MP-RBT01** expansion board features two **STSPIN948** ICs:
-- **U3 (Left IC)**: Drives Motor 1 (Front-Left) and Motor 2 (Front-Right) via Screw Terminal J1.
-- **U2 (Right IC)**: Drives Motor 3 (Rear-Left) and Motor 4 (Rear-Right) via Screw Terminal J4.
+The **X-STM32MP-RBT01** expansion board features two **STSPIN948** ICs, each
+containing two independent full-bridges (A and B):
+- **U2** (`STSPIN948_1`): Drives Motor 1 (Front-Left, bridge A) and Motor 2 (Front-Right, bridge B) via Screw Terminal CN4.
+- **U3** (`STSPIN948_2`): Drives Motor 3 (Rear-Left, bridge A) and Motor 4 (Rear-Right, bridge B) via Screw Terminal CN5.
+
+Both ICs are strapped (jumpers J6/J7/J8 and J11/J12/J13, factory default) for
+**dual independent full-bridge mode with fixed OFF-time current limiting**.
 
 ### Control Lines per Motor
-Each motor channel receives:
-1. **PWM Speed Input**: Configured at **20 kHz** ultrasonic frequency via TIM3 Channels 1–4 (`PB4`, `PB5`, `PB0`, `PB1`). At 20 kHz, switching noise is beyond human hearing, eliminating annoying high-pitched motor whine.
-2. **Direction GPIO Input**: Digital outputs (`PC0`, `PC1`, `PC2`, `PC3`) controlling H-bridge polarity.
-3. **Global Driver Enable / Standby**: Pin `PC4`. Held LOW on startup (high-impedance safe state). Driven HIGH by `Motor_Start()`.
-4. **Hardware Fault Monitor**: Pin `PC5`. Open-drain active-low input tied to internal driver diagnostics (over-temperature, overcurrent, UVLO).
+Each motor channel has three lines (see `hardware/pinout.md` for the CN2 pins):
+1. **PWM Speed Input (`PWM1x`)**: Configured at **20 kHz** ultrasonic frequency via TIM3 Channels 1–4 (`PB4`, `PB5`, `PB0`, `PB1`). At 20 kHz, switching noise is beyond human hearing, eliminating annoying high-pitched motor whine. While `PWM1x` is low an enabled bridge brakes the motor (both low-side MOSFETs on).
+2. **Direction Input (`PHx`)**: Digital outputs (`PC0`, `PC1`, `PC2`, `PC3`) controlling H-bridge polarity.
+3. **Enable / Fault (`EN/nFAULTx`)**: Open-drain lines `PC4`, `PC5`, `PC6`, `PC8`, one per motor. The RBT01 pulls each line up to 3V3 through 39 kΩ, so a bridge is **enabled unless the MCU holds its line low**. The firmware:
+   - drives all four lines low at power-up and whenever the car is idle (bridge outputs high-impedance, wheels cannot be driven);
+   - releases them in `Motor_Start()` and pulls them low again once the wheels have ramped to zero after `Motor_Stop()`, and immediately on any emergency stop;
+   - reads the lines back while they are released. The STSPIN948 pulls a line low on under-voltage lockout (motor supply below 5.2 V typ), overcurrent or thermal shutdown. After a 10 ms settling time, 3 low samples latch a fault, disable all bridges and send `ALARM:DRIVER_FAULT:M1=..,M2=..,M3=..,M4=..`. Clear it with `RESET`.
 
-### Current Limit Configuration (Trimpots R70 & R71)
-The board includes onboard trimpots `R70` and `R71` to set the internal current comparator reference voltage ($V_{\text{REF}}$):
+There is no global enable/standby pin and no separate fault pin on the 40-pin
+connector: `nSTDBY` is tied high on the board.
 
-$$I_{\text{peak}} = \frac{V_{\text{REF}}}{R_{\text{sense}}}$$
+### Current Limit Configuration (Trimmers R51, R55, R71, R76)
+Each bridge has its own trimmer setting the current-limiter reference voltage
+($V_{\text{REF}}$): `R51` (M1), `R55` (M2), `R71` (M3), `R76` (M4). The shunt
+voltage is amplified by the STSPIN948's internal amplifier ($A_{\text{CL}} = 10$)
+before it is compared with $V_{\text{REF}}$:
 
-With $R_{\text{sense}} = 50\text{ m}\Omega$ (`R050`), adjust trimpots so current does not exceed the continuous stall rating of your chassis motors (typically 1.0 A – 2.0 A per motor).
+$$I_{\text{peak}} = \frac{V_{\text{REF}}}{A_{\text{CL}} \times R_{\text{sense}}} = \frac{V_{\text{REF}}}{0.5\ \Omega}$$
+
+With $R_{\text{sense}} = 50\text{ m}\Omega$ (`R050`), every 0.5 V of $V_{\text{REF}}$ is 1 A of peak current. Adjust the trimmers so current does not exceed the continuous stall rating of your chassis motors (typically 1.0 A – 2.0 A per motor, i.e. 0.5 V – 1.0 V).
 
 ---
 

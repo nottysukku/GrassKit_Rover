@@ -13,10 +13,10 @@ The system uses an ASCII text-based, line-delimited (`\r\n` or `\n`) protocol th
 
 | Command | Arguments | Description | Response | Example |
 |:---|:---|:---|:---|:---|
-| `START` | None | Enables motor driver power stage and starts audio engine | `OK:START\r\n` | `START` |
+| `START` | None | Enables motor driver power stage | `OK:START\r\n` | `START` |
 | `STOP` | None | Gracefully ramps motor speed to 0 and returns engine to idle | `OK:STOP\r\n` | `STOP` |
-| `BRAKE` | None | Immediately zeros motor PWM and triggers exhaust pop sound | `OK:BRAKE\r\n` | `BRAKE` |
-| `ESTOP` | None | Emergency Stop: Kills PWM, shuts down STBY line, latches e-stop | `ALARM:EMERGENCY_STOP_TRIGGERED\r\n` | `ESTOP` |
+| `BRAKE` | None | Immediately zeros motor PWM | `OK:BRAKE\r\n` | `BRAKE` |
+| `ESTOP` | None | Emergency Stop: Kills PWM, disables all four bridges, latches e-stop | `ALARM:EMERGENCY_STOP_TRIGGERED\r\n` | `ESTOP` |
 | `RESET` | None | Clears emergency stop latch and resets fault status | `OK:RESET\r\n` | `RESET` |
 | `STATUS`| None | Queries full vehicle state telemetry | `STATUS:STATE=...,RPM=...` | `STATUS` |
 | `HELP`  | None | Returns summary of supported commands | Multi-line text | `HELP` |
@@ -35,7 +35,7 @@ The system uses an ASCII text-based, line-delimited (`\r\n` or `\n`) protocol th
 
 ---
 
-## 3. Engine & Sound Effects Commands
+## 3. Virtual Engine Commands
 
 | Command | Arguments | Description | Example |
 |:---|:---|:---|:---|
@@ -44,8 +44,7 @@ The system uses an ASCII text-based, line-delimited (`\r\n` or `\n`) protocol th
 | `GEAR:UP` | None | Shifts up one gear with ignition cut effect | `GEAR:UP` |
 | `GEAR:DOWN`| None | Shifts down one gear with rev-match effect | `GEAR:DOWN` |
 | `TURBO:<val>`| `ON` or `OFF` | Enables/disables turbocharger boost buildup | `TURBO:ON` |
-| `REV` | None | Blips throttle in neutral, producing sudden RPM surge & overrun crackle | `REV` |
-| `VOLUME:<val>`| `0` to `100` | Sets master digital audio gain percentage | `VOLUME:85` |
+| `REV` | None | Blips throttle in neutral, producing a sudden RPM surge | `REV` |
 
 ---
 
@@ -70,3 +69,8 @@ TELE:RPM=3450,THROT=45%,GEAR=3,BOOST=0.60,M1=45,M2=45,M3=45,M4=45
    WARN:COMM_TIMEOUT_AUTO_STOP\r\n
    ```
 2. **Periodic Keep-Alive**: When driving with joystick controls, the mobile app or PC controller should send a `DRIVE:...` packet every 100 ms to satisfy the watchdog.
+3. **Motor Driver Fault**: If an enabled STSPIN948 bridge holds its `EN/nFAULT` line low (motor supply below 5.2 V, overcurrent or overtemperature), all bridges are disabled, `STATUS` reports `STATE=FAULT`, and the firmware emits one line naming the affected motors (`1` = faulted):
+   ```text
+   ALARM:DRIVER_FAULT:M1=0,M2=1,M3=0,M4=0\r\n
+   ```
+   Send `RESET` to clear it.

@@ -39,33 +39,24 @@ This document presents the complete hardware and firmware block diagrams for the
        │  │  - RPM (900-7000)│ Throttle   │  - TIM3 (20 kHz) │  │
        │  │  - 6-Speed Gear  │ Steer      │  - 4WD Mecanum   │  │
        │  │  - Turbo Boost   │ Strafe     │  - S-Curve Ramp  │  │
-       │  └────────┬─────────┘            └────────┬─────────┘  │
-       │           │                               │            │
-       │           ▼                               │            │
-       │  ┌──────────────────┐                     │            │
-       │  │ Audio Synthesizer│                     │            │
-       │  │  - Combustion Fx │                     │            │
-       │  │  - Intake Roar   │                     │            │
-       │  │  - Overrun Pops  │                     │            │
-       │  │  - I2S2 + DMA1   │                     │            │
-       │  └────────┬─────────┘                     │            │
-       └───────────┼───────────────────────────────┼────────────┘
-                   │                               │
-             I2S2  │                               │ 4x PWM + 4x DIR
-         (PB12/13/15)                              │ (PB4/5/0/1, PC0-3)
-                   ▼                               ▼
-       ┌───────────────────────┐       ┌────────────────────────┐
-       │ MAX98357A CLASS-D AMP │       │  ST X-STM32MP-RBT01    │
-       │ (3.2W Filterless I2S) │       │ (Dual STSPIN948, 48V)  │
-       └───────────┬───────────┘       └───────────┬────────────┘
-                   │                               │
-                   │ Differential Audio            │ 4x Motor Drive (H-Bridge)
-                   ▼                               ▼
-       ┌───────────────────────┐       ┌────────────────────────┐
-       │  LOUDSPEAKER (4-8 Ω)  │       │ 4x MECANUM DC MOTORS   │
-       │   V8 Race Car Engine  │       │ FL, FR, RL, RR Drive   │
-       │       Sound FX        │       │                        │
-       └───────────────────────┘       └────────────────────────┘
+       │  │  (telemetry only)│            │                  │  │
+       │  └──────────────────┘            └────────┬─────────┘  │
+       └───────────────────────────────────────────┼────────────┘
+                                                   │
+                                                   │ 4x PWM + 4x DIR + 4x EN/nFAULT
+                                                   │ (PB4/5/0/1, PC0-3, PC4/5/6/8)
+                                                   ▼
+                                       ┌────────────────────────┐
+                                       │  ST X-STM32MP-RBT01    │
+                                       │ (Dual STSPIN948, 48V)  │
+                                       └───────────┬────────────┘
+                                                   │
+                                                   │ 4x Motor Drive (H-Bridge)
+                                                   ▼
+                                       ┌────────────────────────┐
+                                       │ 4x MECANUM DC MOTORS   │
+                                       │ FL, FR, RL, RR Drive   │
+                                       └────────────────────────┘
 ```
 
 ---
@@ -75,8 +66,8 @@ This document presents the complete hardware and firmware block diagrams for the
 ```text
    BATTERY PACK (7.4V - 12.0V LiPo / NiMH / 18650)
         │
-        ├───[Power Switch]───────► X-STM32MP-RBT01 VIN (Screw Terminal)
-        │                          │ (Protected by 15A Blade Fuse F1)
+        ├───[Power Switch]───────► X-STM32MP-RBT01 CN3 (2-pin Screw Terminal)
+        │                          │ (Protected by 15A Fuse F1)
         │                          │
         │                          ▼
         │                    STSPIN948 Power Stage ──► 4x Brushed DC Motors
@@ -86,11 +77,9 @@ This document presents the complete hardware and firmware block diagrams for the
         │
         ├───► Nucleo-L073RZ (5V Pin)
         │        │
-        │        ├───► Nucleo 3.3V LDO ──► STM32L073RZ VDD
-        │        │                     ──► X-STM32MP-RBT01 Logic VDD (Pin 1)
-        │        │                     ──► X-NUCLEO-IDB05A2 VDD
-        │        │
-        │        └───► MAX98357A VIN (+5V)
+        │        └───► Nucleo 3.3V LDO ──► STM32L073RZ VDD
+        │                              ──► X-STM32MP-RBT01 Logic VDD (Pin 1)
+        │                              ──► X-NUCLEO-IDB05A2 VDD
         │
    COMMON GROUND (GND)
         │
@@ -99,5 +88,5 @@ This document presents the complete hardware and firmware block diagrams for the
 
 > [!CAUTION]
 > **ELECTRICAL ISOLATION WARNING**:
-> - Never feed motor battery voltage (>5V) to any pin of the Nucleo-L073RZ or MAX98357A!
+> - Never feed motor battery voltage (>5V) to any pin of the Nucleo-L073RZ!
 > - The STSPIN948 power ground and logic ground meet at the X-STM32MP-RBT01 ground plane. Ensure an explicit, heavy ground wire connects the Nucleo GND to the motor driver GND before powering up.
