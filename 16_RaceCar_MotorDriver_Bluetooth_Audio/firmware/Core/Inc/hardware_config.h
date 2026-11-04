@@ -77,16 +77,17 @@ extern "C" {
 #define MOTOR_PWM_MAX_DUTY            MOTOR_PWM_PERIOD_TICKS
 
 /* Motor 1: Front-Left, U2 bridge A
- * (PWM: PB4 / TIM3_CH1 -> CN2.32, PH: PC0 -> CN2.23, EN/nFAULT: PC4 -> CN2.13) */
-#define MOTOR1_PWM_GPIO_PORT          GPIOB
-#define MOTOR1_PWM_PIN                GPIO_PIN_4
+ * (PWM: PC6 / TIM3_CH1 -> CN10.4 -> CN2.32, PH: PC0 -> CN2.23, EN/nFAULT: PC4 -> CN2.13)
+ * Remapped from PB4 to PC6 so X-NUCLEO-67W61M1 (ST67W61 CHIP_EN on PB4/D5) has zero conflict! */
+#define MOTOR1_PWM_GPIO_PORT          GPIOC
+#define MOTOR1_PWM_PIN                GPIO_PIN_6
 #define MOTOR1_PWM_CHANNEL            TIM_CHANNEL_1
 #define MOTOR1_DIR_GPIO_PORT          GPIOC
 #define MOTOR1_DIR_PIN                GPIO_PIN_0
 #define MOTOR1_EN_PIN                 GPIO_PIN_4
 
 /* Motor 2: Front-Right, U2 bridge B
- * (PWM: PB5 / TIM3_CH2 -> CN2.33, PH: PC1 -> CN2.24, EN/nFAULT: PC5 -> CN2.15) */
+ * (PWM: PB5 / TIM3_CH2 -> CN10.29 -> CN2.33, PH: PC1 -> CN2.24, EN/nFAULT: PC5 -> CN2.15) */
 #define MOTOR2_PWM_GPIO_PORT          GPIOB
 #define MOTOR2_PWM_PIN                GPIO_PIN_5
 #define MOTOR2_PWM_CHANNEL            TIM_CHANNEL_2
@@ -95,16 +96,16 @@ extern "C" {
 #define MOTOR2_EN_PIN                 GPIO_PIN_5
 
 /* Motor 3: Rear-Left, U3 bridge A
- * (PWM: PB0 / TIM3_CH3 -> CN2.31, PH: PC2 -> CN2.19, EN/nFAULT: PC6 -> CN2.16) */
+ * (PWM: PB0 / TIM3_CH3 -> CN7.34 -> CN2.31, PH: PC2 -> CN2.19, EN/nFAULT: PC9 -> CN10.1 -> CN2.16) */
 #define MOTOR3_PWM_GPIO_PORT          GPIOB
 #define MOTOR3_PWM_PIN                GPIO_PIN_0
 #define MOTOR3_PWM_CHANNEL            TIM_CHANNEL_3
 #define MOTOR3_DIR_GPIO_PORT          GPIOC
 #define MOTOR3_DIR_PIN                GPIO_PIN_2
-#define MOTOR3_EN_PIN                 GPIO_PIN_6
+#define MOTOR3_EN_PIN                 GPIO_PIN_9
 
 /* Motor 4: Rear-Right, U3 bridge B
- * (PWM: PB1 / TIM3_CH4 -> CN2.36, PH: PC3 -> CN2.21, EN/nFAULT: PC8 -> CN2.18) */
+ * (PWM: PB1 / TIM3_CH4 -> CN10.24 -> CN2.36, PH: PC3 -> CN2.21, EN/nFAULT: PC8 -> CN10.2 -> CN2.18) */
 #define MOTOR4_PWM_GPIO_PORT          GPIOB
 #define MOTOR4_PWM_PIN                GPIO_PIN_1
 #define MOTOR4_PWM_CHANNEL            TIM_CHANNEL_4
@@ -117,13 +118,15 @@ extern "C" {
 #define MOTOR_EN_GPIO_PORT            GPIOC
 #define MOTOR_EN_ALL_PINS             (MOTOR1_EN_PIN | MOTOR2_EN_PIN | MOTOR3_EN_PIN | MOTOR4_EN_PIN)
 
-/* A released EN/nFAULT line rises through 39k / 10nF on the RBT01: ignore it for
- * this long after enabling, then require repeated low samples to flag a fault */
-#define MOTOR_FAULT_BLANKING_MS       10UL
-#define MOTOR_FAULT_DEBOUNCE_SAMPLES  3U
+/* Extended blanking (60 ms) and debounce (30 ms) to ride through transient voltage
+ * dips on current-limited bench power supplies (e.g. 0.5A limit) during 4-wheel spin-up */
+#define MOTOR_FAULT_BLANKING_MS       60UL
+#define MOTOR_FAULT_DEBOUNCE_SAMPLES  30U
 
-/* Acceleration / Deceleration Ramping Parameters */
-#define MOTOR_RAMP_STEP_PER_MS        2.0f        /* Max % change per millisecond */
+/* Acceleration / Deceleration Ramping & Staggered Start Parameters */
+#define MOTOR_RAMP_STEP_PER_MS        0.35f       /* Smooth acceleration (% per ms) */
+#define MOTOR_RAMP_DOWN_STEP_PER_MS   2.0f        /* Crisp deceleration (% per ms) */
+#define MOTOR_START_STAGGER_MS        35UL        /* Per-wheel stagger delay on tandem start */
 #define MOTOR_DEADBAND_PERCENT        4.0f        /* Deadband below which PWM is 0 */
 
 /* =============================================================================

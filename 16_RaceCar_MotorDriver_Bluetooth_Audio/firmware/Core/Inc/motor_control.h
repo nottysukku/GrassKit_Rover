@@ -34,6 +34,8 @@ typedef struct {
     float current_speed;      /* Current ramped speed percentage */
     uint16_t pwm_duty;        /* Applied timer PWM duty cycle ticks */
     uint8_t direction;        /* 1 = Forward, 0 = Reverse */
+    uint32_t stagger_delay_ms;/* Sequential start-up delay to prevent simultaneous inrush */
+    bool invert_dir;          /* Optional polarity inversion per wheel */
 } MotorChannel_t;
 
 typedef struct {
@@ -62,6 +64,8 @@ void Motor_ResetFault(void);
 void Motor_SetDrive(float throttle, float steer, float strafe);
 void Motor_SetIndividual(uint8_t motor_id, float speed_percent);
 void Motor_SetMode(DriveMode_t mode);
+void Motor_SetInvert(uint8_t motor_id, bool invert);
+bool Motor_GetInvert(uint8_t motor_id);
 
 void Motor_UpdateRamp(uint32_t delta_ms);
 

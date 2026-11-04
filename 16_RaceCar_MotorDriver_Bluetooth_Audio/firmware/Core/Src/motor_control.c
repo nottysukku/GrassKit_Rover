@@ -30,6 +30,9 @@ void Motor_Init(void)
     memset(&g_motor_ctrl, 0, sizeof(g_motor_ctrl));
     g_motor_ctrl.state = MOTOR_STATE_DISABLED;
     g_motor_ctrl.drive_mode = DRIVE_MODE_MECANUM_OMNI;
+    /* Right-side motors (M2 FR, M4 RR) are mounted mirrored on the chassis */
+    g_motor_ctrl.motors[1].invert_dir = true;
+    g_motor_ctrl.motors[3].invert_dir = true;
 
     /* Initialize low-level peripherals */
     Motor_Hardware_Init_GPIO();
@@ -78,8 +81,16 @@ static void Motor_Hardware_Init_TIM3(void)
 
     MOTOR_PWM_TIMER_CLK_ENABLE();
 
-    /* Configure PB4 (CH1), PB0 (CH3), PB1 (CH4) as TIM3 Alternate Function AF2 with pull-down */
-    GPIO_InitStruct.Pin = MOTOR1_PWM_PIN | MOTOR3_PWM_PIN | MOTOR4_PWM_PIN;
+    /* Configure PC6 (Motor 1 / CH1) as TIM3 Alternate Function AF2 with pull-down */
+    GPIO_InitStruct.Pin = MOTOR1_PWM_PIN;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStruct.Alternate = GPIO_AF2_TIM3;
+    HAL_GPIO_Init(MOTOR1_PWM_GPIO_PORT, &GPIO_InitStruct);
+
+    /* Configure PB0 (CH3), PB1 (CH4) as TIM3 Alternate Function AF2 with pull-down */
+    GPIO_InitStruct.Pin = MOTOR3_PWM_PIN | MOTOR4_PWM_PIN;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
     GPIO_InitStruct.Pull = GPIO_PULLDOWN;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -106,15 +117,20 @@ static void Motor_Hardware_Init_TIM3(void)
      * otherwise Motor 2 never gets a PWM signal */
     HAL_TIMEx_RemapConfig(&htim3_motors, TIM3_TI2_GPIOB5_AF4);
 
-    /* Output Compare Configuration (PWM Mode 1, initial duty 0) */
+    /* Output Compare Configuration:
+     * Phase-interleave Bridge A (M1/CH1, M3/CH3 -> PWM Mode 1, active at start of period)
+     * against Bridge B (M2/CH2, M4/CH4 -> PWM Mode 2, active at end of period) */
     sConfigOC.OCMode = TIM_OCMODE_PWM1;
     sConfigOC.Pulse = 0;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
 
     HAL_TIM_PWM_ConfigChannel(&htim3_motors, &sConfigOC, TIM_CHANNEL_1);
-    HAL_TIM_PWM_ConfigChannel(&htim3_motors, &sConfigOC, TIM_CHANNEL_2);
     HAL_TIM_PWM_ConfigChannel(&htim3_motors, &sConfigOC, TIM_CHANNEL_3);
+
+    sConfigOC.OCMode = TIM_OCMODE_PWM2;
+    sConfigOC.Pulse = MOTOR_PWM_PERIOD_TICKS;
+    HAL_TIM_PWM_ConfigChannel(&htim3_motors, &sConfigOC, TIM_CHANNEL_2);
     HAL_TIM_PWM_ConfigChannel(&htim3_motors, &sConfigOC, TIM_CHANNEL_4);
 
     /* Start PWM channels */
@@ -210,14 +226,15 @@ void Motor_EmergencyStop(void)
     Motor_SetBridgesEnabled(false);
 
     __HAL_TIM_SET_COMPARE(&htim3_motors, TIM_CHANNEL_1, 0);
-    __HAL_TIM_SET_COMPARE(&htim3_motors, TIM_CHANNEL_2, 0);
+    __HAL_TIM_SET_COMPARE(&htim3_motors, TIM_CHANNEL_2, MOTOR_PWM_PERIOD_TICKS);
     __HAL_TIM_SET_COMPARE(&htim3_motors, TIM_CHANNEL_3, 0);
-    __HAL_TIM_SET_COMPARE(&htim3_motors, TIM_CHANNEL_4, 0);
+    __HAL_TIM_SET_COMPARE(&htim3_motors, TIM_CHANNEL_4, MOTOR_PWM_PERIOD_TICKS);
 
     for (int i = 0; i < 4; i++) {
         g_motor_ctrl.motors[i].target_speed = 0.0f;
         g_motor_ctrl.motors[i].current_speed = 0.0f;
         g_motor_ctrl.motors[i].pwm_duty = 0;
+        g_motor_ctrl.motors[i].stagger_delay_ms = 0;
     }
     g_motor_ctrl.overall_throttle = 0.0f;
     g_motor_ctrl.estop_active = true;
@@ -229,12 +246,28 @@ void Motor_ResetFault(void)
     g_motor_ctrl.estop_active = false;
     g_motor_ctrl.fault_detected = false;
     g_motor_ctrl.fault_mask = 0;
+    memset(g_motor_ctrl.fault_samples, 0, sizeof(g_motor_ctrl.fault_samples));
     Motor_Stop();
 }
 
 void Motor_SetMode(DriveMode_t mode)
 {
     g_motor_ctrl.drive_mode = mode;
+}
+
+void Motor_SetInvert(uint8_t motor_id, bool invert)
+{
+    if (motor_id >= 1 && motor_id <= 4) {
+        g_motor_ctrl.motors[motor_id - 1].invert_dir = invert;
+    }
+}
+
+bool Motor_GetInvert(uint8_t motor_id)
+{
+    if (motor_id >= 1 && motor_id <= 4) {
+        return g_motor_ctrl.motors[motor_id - 1].invert_dir;
+    }
+    return false;
 }
 
 /**
@@ -245,6 +278,9 @@ void Motor_SetMode(DriveMode_t mode)
  */
 void Motor_SetDrive(float throttle, float steer, float strafe)
 {
+    if (g_motor_ctrl.state == MOTOR_STATE_FAULT) {
+        Motor_ResetFault();
+    }
     if (g_motor_ctrl.estop_active) {
         return;
     }
@@ -283,10 +319,30 @@ void Motor_SetDrive(float throttle, float steer, float strafe)
         rr *= scale;
     }
 
-    g_motor_ctrl.motors[0].target_speed = Motor_Clamp(fl, -100.0f, 100.0f);
-    g_motor_ctrl.motors[1].target_speed = Motor_Clamp(fr, -100.0f, 100.0f);
-    g_motor_ctrl.motors[2].target_speed = Motor_Clamp(rl, -100.0f, 100.0f);
-    g_motor_ctrl.motors[3].target_speed = Motor_Clamp(rr, -100.0f, 100.0f);
+    float m[4] = {
+        Motor_Clamp(fl, -100.0f, 100.0f),
+        Motor_Clamp(fr, -100.0f, 100.0f),
+        Motor_Clamp(rl, -100.0f, 100.0f),
+        Motor_Clamp(rr, -100.0f, 100.0f)
+    };
+
+    bool all_at_rest = true;
+    for (int i = 0; i < 4; i++) {
+        if (fabsf(g_motor_ctrl.motors[i].current_speed) > 1.0f ||
+            fabsf(g_motor_ctrl.motors[i].target_speed) > 1.0f) {
+            all_at_rest = false;
+            break;
+        }
+    }
+
+    uint32_t stagger_idx = 0;
+    for (int i = 0; i < 4; i++) {
+        g_motor_ctrl.motors[i].target_speed = m[i];
+        if (all_at_rest && fabsf(m[i]) > 1.0f) {
+            g_motor_ctrl.motors[i].stagger_delay_ms = stagger_idx * MOTOR_START_STAGGER_MS;
+            stagger_idx++;
+        }
+    }
 
     /* Auto-enable if drive is requested while the bridges are idle or braked */
     if (g_motor_ctrl.state != MOTOR_STATE_RUNNING &&
@@ -297,7 +353,11 @@ void Motor_SetDrive(float throttle, float steer, float strafe)
 
 void Motor_SetIndividual(uint8_t motor_id, float speed_percent)
 {
+    if (g_motor_ctrl.state == MOTOR_STATE_FAULT) {
+        Motor_ResetFault();
+    }
     if (motor_id < 4 && !g_motor_ctrl.estop_active) {
+        g_motor_ctrl.motors[motor_id].stagger_delay_ms = 0;
         g_motor_ctrl.motors[motor_id].target_speed = Motor_Clamp(speed_percent, -100.0f, 100.0f);
     }
 }
@@ -315,25 +375,41 @@ void Motor_UpdateRamp(uint32_t delta_ms)
     if (Motor_CheckDriverFault(delta_ms)) {
         g_motor_ctrl.fault_detected = true;
         Motor_EmergencyStop();
+        g_motor_ctrl.estop_active = false; /* Fault auto-recovers on next command; only ESTOP latches */
         g_motor_ctrl.state = MOTOR_STATE_FAULT;
         return;
     }
 
-    float max_step = MOTOR_RAMP_STEP_PER_MS * (float)delta_ms;
+    float accel_step = MOTOR_RAMP_STEP_PER_MS * (float)delta_ms;
+    float decel_step = MOTOR_RAMP_DOWN_STEP_PER_MS * (float)delta_ms;
     bool all_stopped = true;
 
     for (int i = 0; i < 4; i++) {
-        float diff = g_motor_ctrl.motors[i].target_speed - g_motor_ctrl.motors[i].current_speed;
+        if (g_motor_ctrl.motors[i].stagger_delay_ms > 0) {
+            if (delta_ms >= g_motor_ctrl.motors[i].stagger_delay_ms) {
+                g_motor_ctrl.motors[i].stagger_delay_ms = 0;
+            } else {
+                g_motor_ctrl.motors[i].stagger_delay_ms -= delta_ms;
+                all_stopped = false;
+                continue;
+            }
+        }
+
+        float target = g_motor_ctrl.motors[i].target_speed;
+        float current = g_motor_ctrl.motors[i].current_speed;
+        float diff = target - current;
+        bool accelerating = (fabsf(target) > fabsf(current)) && (target * current >= 0.0f);
+        float max_step = accelerating ? accel_step : decel_step;
 
         if (fabsf(diff) <= max_step) {
-            g_motor_ctrl.motors[i].current_speed = g_motor_ctrl.motors[i].target_speed;
+            g_motor_ctrl.motors[i].current_speed = target;
         } else if (diff > 0.0f) {
             g_motor_ctrl.motors[i].current_speed += max_step;
         } else {
             g_motor_ctrl.motors[i].current_speed -= max_step;
         }
 
-        if (g_motor_ctrl.motors[i].current_speed != 0.0f) {
+        if (fabsf(g_motor_ctrl.motors[i].current_speed) > 0.01f || fabsf(target) > 0.01f) {
             all_stopped = false;
         }
 
@@ -350,6 +426,9 @@ static void Motor_ApplyPWMAndDirection(uint8_t id, float speed)
 {
     float abs_speed = fabsf(speed);
     uint8_t dir = (speed >= 0.0f) ? 1 : 0;
+    if (g_motor_ctrl.motors[id].invert_dir) {
+        dir = dir ? 0 : 1;
+    }
     uint32_t duty = 0;
 
     if (abs_speed < MOTOR_DEADBAND_PERCENT) {
@@ -367,21 +446,21 @@ static void Motor_ApplyPWMAndDirection(uint8_t id, float speed)
     GPIO_PinState pin_state = (dir == 1) ? GPIO_PIN_SET : GPIO_PIN_RESET;
 
     switch (id) {
-        case 0: /* Front Left */
+        case 0: /* Front Left (PWM Mode 1) */
             HAL_GPIO_WritePin(MOTOR1_DIR_GPIO_PORT, MOTOR1_DIR_PIN, pin_state);
             __HAL_TIM_SET_COMPARE(&htim3_motors, MOTOR1_PWM_CHANNEL, duty);
             break;
-        case 1: /* Front Right (inverted direction for symmetric mounting) */
-            HAL_GPIO_WritePin(MOTOR2_DIR_GPIO_PORT, MOTOR2_DIR_PIN, (dir == 1) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-            __HAL_TIM_SET_COMPARE(&htim3_motors, MOTOR2_PWM_CHANNEL, duty);
+        case 1: /* Front Right (PWM Mode 2 phase-interleaved) */
+            HAL_GPIO_WritePin(MOTOR2_DIR_GPIO_PORT, MOTOR2_DIR_PIN, pin_state);
+            __HAL_TIM_SET_COMPARE(&htim3_motors, MOTOR2_PWM_CHANNEL, MOTOR_PWM_PERIOD_TICKS - duty);
             break;
-        case 2: /* Rear Left */
+        case 2: /* Rear Left (PWM Mode 1) */
             HAL_GPIO_WritePin(MOTOR3_DIR_GPIO_PORT, MOTOR3_DIR_PIN, pin_state);
             __HAL_TIM_SET_COMPARE(&htim3_motors, MOTOR3_PWM_CHANNEL, duty);
             break;
-        case 3: /* Rear Right (inverted direction for symmetric mounting) */
-            HAL_GPIO_WritePin(MOTOR4_DIR_GPIO_PORT, MOTOR4_DIR_PIN, (dir == 1) ? GPIO_PIN_RESET : GPIO_PIN_SET);
-            __HAL_TIM_SET_COMPARE(&htim3_motors, MOTOR4_PWM_CHANNEL, duty);
+        case 3: /* Rear Right (PWM Mode 2 phase-interleaved) */
+            HAL_GPIO_WritePin(MOTOR4_DIR_GPIO_PORT, MOTOR4_DIR_PIN, pin_state);
+            __HAL_TIM_SET_COMPARE(&htim3_motors, MOTOR4_PWM_CHANNEL, MOTOR_PWM_PERIOD_TICKS - duty);
             break;
         default:
             break;

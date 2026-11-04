@@ -169,6 +169,17 @@ void Command_Parse(char *cmd_str)
             Bluetooth_Send("ERR:INVALID_MOTOR_ID\r\n");
         }
     }
+    else if (strncmp(buffer, "INVERT:", 7) == 0) {
+        int id = atoi(buffer + 7);
+        if (id >= 1 && id <= 4) {
+            bool inv = !Motor_GetInvert((uint8_t)id);
+            Motor_SetInvert((uint8_t)id, inv);
+            Bluetooth_Send(inv ? "OK:INVERT:ON\r\n" : "OK:INVERT:OFF\r\n");
+        } else {
+            valid = false;
+            Bluetooth_Send("ERR:INVERT_ID\r\n");
+        }
+    }
     else if (strcmp(buffer, "STATUS") == 0) {
         Command_SendStatus();
     }

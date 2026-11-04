@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<link rel="icon" href="data:,">
+<title>GrassKit Rover</title>
+<style>
+:root{--bg:#03234B;--card:#0b3567;--ink:#fff;--mut:#a9bfdc;--blue:#3CB4E6;--yel:#FFD200;--pink:#E6007E;--grn:#49B170;--line:#1d4a80}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.35 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);-webkit-user-select:none;user-select:none;touch-action:manipulation}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+h1{font-size:19px;margin:0}
+#pill{font-size:12px;padding:4px 10px;border-radius:99px;background:var(--line);color:var(--mut);white-space:nowrap}
+#pill.run{background:var(--grn);color:#fff}
+#pill.bad{background:var(--pink);color:#fff}
+nav{display:flex;margin:0 12px;border-radius:10px;overflow:hidden;border:1px solid var(--line)}
+nav button{flex:1;height:40px;border:0;background:transparent;color:var(--mut);font-size:15px;font-weight:600}
+nav button.on{background:var(--blue);color:var(--bg)}
+main{max-width:460px;margin:0 auto;padding:6px 12px 96px}
+.card{background:var(--card);border-radius:14px;padding:12px;margin:10px 0}
+.row{display:flex;align-items:center;gap:10px}
+.lbl{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+input[type=range]{flex:1;min-width:0;accent-color:var(--yel);height:30px}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pad4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.b{height:64px;border:0;border-radius:12px;background:var(--blue);color:var(--bg);font-size:24px;font-weight:700;touch-action:none;padding:0}
+.b small{display:block;font-size:10px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.pad4 .b{height:60px;font-size:20px}
+.b.on{background:var(--yel)}
+.b.stop{background:#fff;font-size:15px}
+.b:disabled{opacity:.25}
+.seg{display:flex;gap:6px;margin-top:10px}
+.seg button{flex:1;height:36px;border-radius:9px;border:1px solid var(--line);background:transparent;color:var(--mut);font-weight:600;font-size:13px}
+.seg button.on{background:var(--yel);color:var(--bg);border-color:var(--yel)}
+.wheels{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.wh{background:var(--bg);border-radius:10px;padding:8px;text-align:center}
+.wh b{display:block;font-size:22px;line-height:1.2}
+.wh span{font-size:12px;color:var(--mut)}
+#es{width:100%;height:58px;border:0;border-radius:12px;background:var(--pink);color:#fff;font-size:19px;font-weight:700}
+#rs{width:100%;height:40px;border:0;border-radius:10px;background:var(--grn);color:#fff;font-weight:600;margin-top:8px}
+.wl{border-top:1px solid var(--line);padding:10px 0}
+.wl:first-child{border-top:0;padding-top:0}
+.wl h3{margin:0 0 2px;font-size:15px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.wl h3 span{font-weight:400;color:var(--mut);font-size:12px;text-align:right}
+.num{min-width:46px;text-align:right;font-variant-numeric:tabular-nums}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mut)}
+.chk input{width:20px;height:20px;accent-color:var(--yel)}
+.btn2{flex:1;height:46px;border:0;border-radius:10px;font-weight:700;font-size:15px}
+#run{background:var(--grn);color:#fff}
+#run.on{background:var(--yel);color:var(--bg)}
+.hint{font-size:12px;color:var(--mut);margin:8px 0 0}
+input[type=number]{width:84px;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:#fff;padding:0 8px;font-size:15px}
+footer{position:fixed;left:0;right:0;bottom:0;background:#021a38;color:var(--mut);font-size:12px;padding:8px 12px;min-height:34px;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<header><h1>GrassKit Rover</h1><span id="pill">connecting</span></header>
+<nav><button id="t1" class="on">Drive</button><button id="t2">Wheel lab</button></nav>
+<main>
+<section id="pD">
+<div class="card">
+<div class="row"><span class="lbl" style="margin:0">Speed</span><input id="sp" type="range" min="10" max="100" step="5" value="40"><b class="num" id="spv">40%</b></div>
+<div class="seg"><button id="mM" class="on">Mecanum</button><button id="mT">Tank (no sideways)</button></div>
+</div>
+<div class="card">
+<p class="lbl">Move (hold)</p>
+<div class="pad">
+<button class="b" data-v="0.5,0,-0.5" data-s="1">&#8598;</button>
+<button class="b" data-v="1,0,0">&#9650;</button>
+<button class="b" data-v="0.5,0,0.5" data-s="1">&#8599;</button>
+<button class="b" data-v="0,0,-1" data-s="1">&#9664;</button>
+<button class="b stop" id="st">STOP</button>
+<button class="b" data-v="0,0,1" data-s="1">&#9654;</button>
+<button class="b" data-v="-0.5,0,-0.5" data-s="1">&#8601;</button>
+<button class="b" data-v="-1,0,0">&#9660;</button>
+<button class="b" data-v="-0.5,0,0.5" data-s="1">&#8600;</button>
+</div>
+<p class="lbl" style="margin-top:12px">Turn (hold)</p>
+<div class="pad4">
+<button class="b" data-v="0.7,-0.3,0">&#8624;<small>curve</small></button>
+<button class="b" data-v="0,-1,0">&#8634;<small>spin</small></button>
+<button class="b" data-v="0,1,0">&#8635;<small>spin</small></button>
+<button class="b" data-v="0.7,0.3,0">&#8625;<small>curve</small></button>
+<button class="b" data-v="-0.7,0.3,0">&#8626;<small>back</small></button>
+<button class="b" data-v="0.5,-0.5,0">&#8634;<small>pivot</small></button>
+<button class="b" data-v="0.5,0.5,0">&#8635;<small>pivot</small></button>
+<button class="b" data-v="-0.7,-0.3,0">&#8627;<small>back</small></button>
+</div>
+<p class="hint">Keyboard: arrows or W/S drive and spin, A/D sideways, Q/E/Z/C diagonals, space stops.</p>
+</div>
+<div class="card">
+<p class="lbl">Wheels now</p>
+<div class="wheels" id="wv"></div>
+</div>
+<div class="card">
+<button id="es">EMERGENCY STOP</button>
+<button id="rs">Reset e-stop</button>
+</div>
+</section>
+<section id="pL" hidden>
+<div class="card">
+<p class="lbl">Wheel lab</p>
+<div id="wl"></div>
+<div class="row" style="margin-top:8px"><button class="btn2" id="run">Run</button><button class="btn2" id="zero" style="background:#fff;color:#03234B">Zero all</button></div>
+<p class="hint">Set each wheel's PWM (+ is forward), then tap Run. Each wheel shows its PWM, its direction pin (PH) and an RPM estimate. The motors have no encoders, so RPM is worked out from PWM and the rated RPM below.</p>
+</div>
+<div class="card">
+<p class="lbl">Settings</p>
+<div class="row"><span style="flex:1">Motor RPM at 100% PWM</span><input id="mx" type="number" min="10" max="5000" value="200"></div>
+<label class="chk" style="margin-top:12px"><input type="checkbox" id="lnk">Pair wheels by side (front left follows rear left, front right follows rear right)</label>
+<label class="chk" style="margin-top:12px"><input type="checkbox" id="sfl">Mirror sideways moves (if &#9664; &#9654; go the wrong way)</label>
+<p class="hint">Reverse a wheel if it turns backwards when it should go forwards. With pairing on, Reverse changes both wheels on that side. Trim slows a wheel that runs faster than the others during drive moves.</p>
+<div class="row" style="margin-top:12px"><button class="btn2" id="sv" style="background:#FFD200;color:#03234B">Save to rover</button><button class="btn2" id="df" style="background:#1d4a80;color:#fff">Defaults</button></div>
+<p class="hint">Changes work straight away. Save keeps them after power-off.</p>
+</div>
+</section>
+</main>
+<footer id="ft">Ready</footer>
+<script>
+var N = ['Front left', 'Front right', 'Rear left', 'Rear right'];
+function $(i) { return document.getElementById(i); }
+var Q = [], busy = 0, last = 0, mv = null, mvT = null, run = false, runT = null, editT = 0, tank = false, S = {};
+
+function send(c, keep) {
+  if (c === 'ESTOP') { Q = [{c: c}]; }
+  else if (keep) {
+    var f = null;
+    for (var i = 0; i < Q.length; i++) { if (Q[i].k) { f = Q[i]; } }
+    if (f) { f.c = c; } else { Q.push({c: c, k: 1}); }
+  } else {
+    if (c === 'STOP') { Q = Q.filter(function (x) { return !x.k; }); }
+    Q.push({c: c});
+  }
+  pump();
+}
+
+function pump() {
+  if (busy || !Q.length) { return; }
+  var it = Q.shift();
+  busy = 1;
+  var ac = window.AbortController ? new AbortController() : null;
+  var to = setTimeout(function () { if (ac) { ac.abort(); } }, 2500);
+  fetch('/c?x=' + encodeURIComponent(it.c), {cache: 'no-store', signal: ac ? ac.signal : undefined})
+    .then(function (r) { return r.text(); })
+    .then(function (t) { ok(t); })
+    .catch(function () { bad(); })
+    .then(function () { clearTimeout(to); busy = 0; last = Date.now(); pump(); });
+}
+
+function bad() {
+  var p = $('pill');
+  p.textContent = 'no link';
+  p.className = 'bad';
+  $('ft').textContent = 'No reply. Is this phone on the GrassKit_Rover Wi-Fi?';
+}
+
+function ok(t) {
+  var m = t.match(/W:(\S+)/);
+  var msg = t.replace(/W:\S+/, '').trim();
+  if (msg) { $('ft').textContent = msg; }
+  if (!m) { return; }
+  var o = {};
+  m[1].split(';').forEach(function (p) { var i = p.indexOf('='); o[p.slice(0, i)] = p.slice(i + 1); });
+  ['w', 'd', 'ph', 'fl', 'tr'].forEach(function (k) { o[k] = (o[k] || '0,0,0,0').split(',').map(Number); });
+  S = o;
+  var p = $('pill'), f = +o.f;
+  p.textContent = o.st + (f ? ' \u00b7 fault ' + f : '');
+  p.className = (o.st === 'FAULT' || o.st === 'ESTOP' || f) ? 'bad' : (o.st === 'RUNNING' ? 'run' : '');
+  var mx = +$('mx').value || 0;
+  for (var i = 0; i < 4; i++) {
+    var w = o.w[i], d = o.d[i];
+    var arrow = w > 0 ? '\u25b2' : (w < 0 ? '\u25bc' : '\u2022');
+    $('wv' + i).innerHTML = '<b>' + arrow + ' ' + Math.abs(w) + '%</b><span>' + N[i] + '</span>';
+    var rpm = Math.round(d / 100 * mx);
+    $('i' + i).textContent = 'PWM ' + d + '% \u00b7 PH ' + o.ph[i] + ' \u00b7 \u2248' + (w < 0 ? '-' : '') + rpm + ' rpm';
+  }
+  if (Date.now() - editT > 2500) {
+    for (var j = 0; j < 4; j++) {
+      $('f' + j).checked = (o.fl[j] === 0);
+      $('r' + j).value = o.tr[j];
+      $('rv' + j).textContent = o.tr[j] + '%';
+    }
+    $('sfl').checked = (o.sf === '1');
+    $('lnk').checked = (o.lk !== '0');
+    setMode(o.md === 'T');
+  }
+}
+
+function setMode(t) {
+  tank = t;
+  $('mM').className = t ? '' : 'on';
+  $('mT').className = t ? 'on' : '';
+  document.querySelectorAll('[data-s]').forEach(function (b) { b.disabled = t; });
+}
+
+function dcmd() {
+  var s = +$('sp').value, v = mv.split(',');
+  return 'DRIVE:' + Math.round(v[0] * s) + ',' + Math.round(v[1] * s) + ',' + Math.round(v[2] * s);
+}
+function go(v) {
+  stopRun(false);
+  mv = v;
+  send(dcmd(), 1);
+  clearInterval(mvT);
+  mvT = setInterval(function () { if (mv) { send(dcmd(), 1); } }, 200);
+}
+function halt() {
+  document.querySelectorAll('.b.on').forEach(function (b) { b.classList.remove('on'); });
+  if (!mv) { return; }
+  mv = null;
+  clearInterval(mvT);
+  send('STOP');
+}
+
+document.querySelectorAll('[data-v]').forEach(function (b) {
+  b.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
+    if (b.disabled) { return; }
+    try { b.setPointerCapture(e.pointerId); } catch (x) {}
+    b.classList.add('on');
+    go(b.getAttribute('data-v'));
+  });
+  ['pointerup', 'pointercancel'].forEach(function (n) { b.addEventListener(n, halt); });
+  b.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+});
+$('st').onclick = function () { halt(); stopRun(false); send('STOP'); };
+$('es').onclick = function () { mv = null; clearInterval(mvT); stopRun(false); send('ESTOP'); };
+$('rs').onclick = function () { send('RESET'); };
+$('sp').oninput = function () { $('spv').textContent = $('sp').value + '%'; };
+$('mM').onclick = function () { editT = Date.now(); setMode(false); send('MODE:MEC'); };
+$('mT').onclick = function () { editT = Date.now(); setMode(true); send('MODE:TANK'); };
+
+var K = {ArrowUp: '1,0,0', w: '1,0,0', ArrowDown: '-1,0,0', s: '-1,0,0', ArrowLeft: '0,-1,0', ArrowRight: '0,1,0',
+  a: '0,0,-1', d: '0,0,1', q: '0.5,0,-0.5', e: '0.5,0,0.5', z: '-0.5,0,-0.5', c: '-0.5,0,0.5'};
+function key(e) { return e.key.length === 1 ? e.key.toLowerCase() : e.key; }
+document.addEventListener('keydown', function (e) {
+  if (e.target.tagName === 'INPUT') { return; }
+  if (e.key === ' ') { e.preventDefault(); halt(); return; }
+  var v = K[key(e)];
+  if (!v || e.repeat) { return; }
+  if (tank && v.split(',')[2] !== '0') { return; }
+  e.preventDefault();
+  go(v);
+});
+document.addEventListener('keyup', function (e) { if (K[key(e)]) { halt(); } });
+document.addEventListener('visibilitychange', function () { if (document.hidden) { halt(); stopRun(true); } });
+
+function tab(l) {
+  halt();
+  stopRun(true);
+  $('pD').hidden = l;
+  $('pL').hidden = !l;
+  $('t1').className = l ? '' : 'on';
+  $('t2').className = l ? 'on' : '';
+}
+$('t1').onclick = function () { tab(false); };
+$('t2').onclick = function () { tab(true); };
+
+var wv = '', wl = '';
+for (var i = 0; i < 4; i++) {
+  wv += '<div class="wh" id="wv' + i + '"><b>\u2022 0%</b><span>' + N[i] + '</span></div>';
+  wl += '<div class="wl"><h3>' + N[i] + '<span id="i' + i + '">PWM 0%</span></h3>' +
+    '<div class="row"><input type="range" min="-100" max="100" step="5" value="0" id="w' + i + '"><b class="num" id="wn' + i + '">0%</b></div>' +
+    '<div class="row"><label class="chk"><input type="checkbox" id="f' + i + '">Reverse</label>' +
+    '<span class="chk" style="margin-left:auto">Trim</span><input type="range" min="50" max="150" step="5" value="100" id="r' + i + '" style="max-width:42%">' +
+    '<b class="num" id="rv' + i + '">100%</b></div></div>';
+}
+$('wv').innerHTML = wv;
+$('wl').innerHTML = wl;
+[0, 1, 2, 3].forEach(function (i) {
+  $('w' + i).oninput = function () { $('wn' + i).textContent = this.value + '%'; };
+  $('f' + i).onchange = function () {
+    editT = Date.now();
+    if ($('lnk').checked) { $('f' + (i ^ 2)).checked = this.checked; }
+    send('FLIP:' + (i + 1) + ',' + (this.checked ? 0 : 1));
+  };
+  $('r' + i).oninput = function () { editT = Date.now(); $('rv' + i).textContent = this.value + '%'; };
+  $('r' + i).onchange = function () { editT = Date.now(); send('TRIM:' + (i + 1) + ',' + this.value); };
+});
+
+function wcmd() { return 'WHEELS:' + [0, 1, 2, 3].map(function (i) { return $('w' + i).value; }).join(','); }
+function stopRun(stop) {
+  var was = run;
+  run = false;
+  clearInterval(runT);
+  $('run').className = 'btn2';
+  $('run').textContent = 'Run';
+  if (was && stop) { send('STOP'); }
+}
+$('run').onclick = function () {
+  if (run) { stopRun(true); return; }
+  halt();
+  run = true;
+  this.className = 'btn2 on';
+  this.textContent = 'Running \u00b7 tap to stop';
+  send(wcmd(), 1);
+  runT = setInterval(function () { if (run) { send(wcmd(), 1); } }, 250);
+};
+$('zero').onclick = function () {
+  for (var i = 0; i < 4; i++) { $('w' + i).value = 0; $('wn' + i).textContent = '0%'; }
+};
+$('sfl').onchange = function () { editT = Date.now(); send('SFLIP:' + (this.checked ? 1 : 0)); };
+$('lnk').onchange = function () {
+  editT = Date.now();
+  if (this.checked) { $('f0').checked = $('f2').checked; $('f1').checked = $('f3').checked; }
+  send('LINK:' + (this.checked ? 1 : 0));
+};
+$('sv').onclick = function () { send('SAVE'); };
+$('df').onclick = function () { editT = 0; send('DEFAULTS'); };
+try { var m0 = localStorage.getItem('gk_maxrpm'); if (m0) { $('mx').value = m0; } } catch (x) {}
+$('mx').onchange = function () { try { localStorage.setItem('gk_maxrpm', this.value); } catch (x) {} };
+
+setInterval(function () {
+  if (!busy && !Q.length && !mv && !run && Date.now() - last > 900) { send('STATUS'); }
+}, 1000);
+send('STATUS');
+</script>
+</body>
+</html>

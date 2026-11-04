@@ -25,6 +25,15 @@ PORT = 8080
 DEFAULT_SERIAL = 'COM7'
 BAUD = 115200
 
+# Auto-detect STLink port or accept command line argument
+if len(sys.argv) > 1 and sys.argv[1].upper().startswith('COM'):
+    DEFAULT_SERIAL = sys.argv[1].upper()
+else:
+    for p in serial.tools.list_ports.comports():
+        if "STLink" in p.description or "0483:374B" in p.hwid or "0483:3754" in p.hwid:
+            DEFAULT_SERIAL = p.device
+            break
+
 state_lock = threading.Lock()
 telemetry_data = {
     "state": "DISCONNECTED",
@@ -432,12 +441,12 @@ HTML_PAGE = """<!DOCTYPE html>
       <button class="btn-pad" onpointerdown="startDrive(-1, 0, 0)" onpointerup="stopDrive()">▼<small>REV</small></button>
       <button class="btn-pad" onpointerdown="startDrive(0, 1, 0)" onpointerup="stopDrive()">↻<small>TURN R</small></button>
     </div>
-  <!-- Single Motor Diagnostic Testing -->
+  <!-- Single & Tandem Motor Diagnostic Testing -->
   <div style="background:var(--card); border:1px solid var(--border); border-radius:14px; padding:12px; display:flex; flex-direction:column; gap:8px;">
-    <div style="font-size:12px; font-weight:800; color:var(--gold); text-align:center;">🧪 INDIVIDUAL MOTOR BENCH TESTING (1-by-1)</div>
+    <div style="font-size:12px; font-weight:800; color:var(--gold); text-align:center;">🧪 INDIVIDUAL & TANDEM MOTOR BENCH TESTING</div>
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
       <button class="btn-act" style="background:#2980b9; color:white; padding:10px;" onclick="testSingleMotor(1)">
-        🔵 TEST M1 (FL)<br><small>D5 / PB4 (CN2 Pin 32) · CN4 2A+1A</small>
+        🔵 TEST M1 (FL)<br><small>CN10.4 / PC6 (CN2 Pin 32) · CN4 2A+1A</small>
       </button>
       <button class="btn-act" style="background:#27ae60; color:white; padding:10px;" onclick="testSingleMotor(2)">
         🟢 TEST M2 (FR)<br><small>D4 / PB5 (CN2 Pin 33) · CN4 1B+2B</small>
@@ -449,8 +458,17 @@ HTML_PAGE = """<!DOCTYPE html>
         🟣 TEST M4 (RR)<br><small>CN10.24 / PB1 (CN2 Pin 36) · CN5 1B+2B</small>
       </button>
     </div>
-    <button class="btn-act btn-stop" style="padding:8px;" onclick="sendCmd('STOP'); sendCmd('MOTOR:1,0'); sendCmd('MOTOR:2,0'); sendCmd('MOTOR:3,0'); sendCmd('MOTOR:4,0');">
-      ⏹ STOP ALL INDIVIDUAL MOTORS
+    <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px;">
+      <button class="btn-act" style="background:#1e272e; color:#f1f2f6; padding:6px; font-size:10px;" onclick="sendCmd('INVERT:1')">🔄 Flip M1</button>
+      <button class="btn-act" style="background:#1e272e; color:#f1f2f6; padding:6px; font-size:10px;" onclick="sendCmd('INVERT:2')">🔄 Flip M2</button>
+      <button class="btn-act" style="background:#1e272e; color:#f1f2f6; padding:6px; font-size:10px;" onclick="sendCmd('INVERT:3')">🔄 Flip M3</button>
+      <button class="btn-act" style="background:#1e272e; color:#f1f2f6; padding:6px; font-size:10px;" onclick="sendCmd('INVERT:4')">🔄 Flip M4</button>
+    </div>
+    <button class="btn-act" style="background:#2ed573; color:#0b0e14; padding:10px; font-weight:900;" onclick="testAllTandem()">
+      🚀 TEST ALL 4 WHEELS IN TANDEM (2.0s SOFT-START)
+    </button>
+    <button class="btn-act btn-stop" style="padding:8px;" onclick="stopDrive(); sendCmd('MOTOR:1,0'); sendCmd('MOTOR:2,0'); sendCmd('MOTOR:3,0'); sendCmd('MOTOR:4,0');">
+      ⏹ STOP ALL MOTORS
     </button>
   </div>
 
@@ -459,6 +477,7 @@ HTML_PAGE = """<!DOCTYPE html>
 
 <script>
   let driveTimer = null;
+  let tandemTimeout = null;
   let turboState = false;
 
   function sendCmd(cmd) {
@@ -470,6 +489,7 @@ HTML_PAGE = """<!DOCTYPE html>
   }
 
   function testSingleMotor(id) {
+    stopDrive();
     const speed = parseInt(document.getElementById('spd-slider').value) || 30;
     sendCmd('RESET');
     sendCmd('START');
@@ -479,6 +499,14 @@ HTML_PAGE = """<!DOCTYPE html>
       sendCmd(`MOTOR:${id},0`);
       sendCmd('STOP');
     }, 1500);
+  }
+
+  function testAllTandem() {
+    startDrive(1, 0, 0);
+    if (tandemTimeout) clearTimeout(tandemTimeout);
+    tandemTimeout = setTimeout(() => {
+      stopDrive();
+    }, 2000);
   }
 
   function startDrive(thFactor, stFactor, strfFactor) {
@@ -500,6 +528,7 @@ HTML_PAGE = """<!DOCTYPE html>
       }
     }
 
+    sendCmd('RESET');
     sendCmd('START');
     doSend();
 

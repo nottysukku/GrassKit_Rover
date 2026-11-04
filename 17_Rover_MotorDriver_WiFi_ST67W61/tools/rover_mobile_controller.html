@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GrassKit Rover Mobile Wi-Fi Controller</title>
+    <style>
+        :root {
+            --bg-color: #12131C;
+            --card-bg: #1E202E;
+            --accent-blue: #3B82F6;
+            --accent-green: #10B981;
+            --accent-red: #EF4444;
+            --accent-yellow: #F59E0B;
+            --text-main: #F3F4F6;
+            --text-muted: #9CA3AF;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 12px;
+        }
+
+        header {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent-blue);
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+
+        .status-badge.connected {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--accent-green);
+        }
+
+        .settings-card {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .settings-card input {
+            background: #11121A;
+            border: 1px solid #374151;
+            color: var(--text-main);
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            flex: 1;
+        }
+
+        .settings-card button {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* D-Pad Controller */
+        .dpad-container {
+            width: 100%;
+            max-width: 360px;
+            aspect-ratio: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .btn-ctrl {
+            background: #252839;
+            border: 2px solid #374151;
+            border-radius: 16px;
+            color: var(--text-main);
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            transition: all 0.08s ease;
+        }
+
+        .btn-ctrl:active {
+            transform: scale(0.94);
+            filter: brightness(1.25);
+        }
+
+        .btn-fwd {
+            grid-column: 2;
+            grid-row: 1;
+            background: #1A362B;
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .btn-left {
+            grid-column: 1;
+            grid-row: 2;
+            background: #1E2E42;
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .btn-stop {
+            grid-column: 2;
+            grid-row: 2;
+            background: #3B1C22;
+            border-color: var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .btn-right {
+            grid-column: 3;
+            grid-row: 2;
+            background: #1E2E42;
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .btn-bwd {
+            grid-column: 2;
+            grid-row: 3;
+            background: #372A19;
+            border-color: var(--accent-yellow);
+            color: var(--accent-yellow);
+        }
+
+        /* Slider */
+        .speed-control {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .speed-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            accent-color: var(--accent-blue);
+        }
+
+        /* Action Buttons */
+        .action-row {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            border: none;
+            color: white;
+        }
+
+        .btn-estop {
+            background: var(--accent-red);
+        }
+
+        .btn-reset {
+            background: #374151;
+        }
+
+        /* Telemetry Console */
+        .console-card {
+            width: 100%;
+            max-width: 480px;
+            flex: 1;
+            background: #0B0C10;
+            border: 1px solid #232635;
+            border-radius: 10px;
+            padding: 8px 10px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #10B981;
+            overflow-y: auto;
+            max-height: 120px;
+            min-height: 80px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title">GrassKit Rover 4WD</div>
+        <div id="statusBadge" class="status-badge">DISCONNECTED</div>
+    </header>
+
+    <div class="settings-card">
+        <input type="text" id="wsUrl" value="192.168.4.1:8080" placeholder="IP:Port">
+        <button id="btnConnect">Connect</button>
+    </div>
+
+    <!-- D-Pad -->
+    <div class="dpad-container">
+        <button class="btn-ctrl btn-fwd" id="btnFwd">
+            ▲
+            <span style="font-size: 0.75rem; margin-top: 4px;">FORWARD</span>
+        </button>
+        <button class="btn-ctrl btn-left" id="btnLeft">
+            ◄
+            <span style="font-size: 0.75rem; margin-top: 4px;">SPIN LEFT</span>
+        </button>
+        <button class="btn-ctrl btn-stop" id="btnStop">
+            ■
+            <span style="font-size: 0.75rem; margin-top: 4px;">STOP</span>
+        </button>
+        <button class="btn-ctrl btn-right" id="btnRight">
+            ►
+            <span style="font-size: 0.75rem; margin-top: 4px;">SPIN RIGHT</span>
+        </button>
+        <button class="btn-ctrl btn-bwd" id="btnBwd">
+            ▼
+            <span style="font-size: 0.75rem; margin-top: 4px;">BACKWARD</span>
+        </button>
+    </div>
+
+    <!-- Speed Slider -->
+    <div class="speed-control">
+        <div class="speed-label">
+            <span>Cruise Speed Throttle</span>
+            <span id="speedVal" style="color: var(--accent-blue)">45%</span>
+        </div>
+        <input type="range" id="speedSlider" min="15" max="100" value="45">
+    </div>
+
+    <!-- Emergency Stop & Reset -->
+    <div class="action-row">
+        <button class="btn-action btn-estop" id="btnEStop">🚨 EMERGENCY STOP</button>
+        <button class="btn-action btn-reset" id="btnReset">🔄 RESET ALARM</button>
+    </div>
+
+    <!-- Telemetry Log -->
+    <div class="console-card" id="consoleLog">
+        <div>[SYSTEM] Ready. Connect to 'GrassKit_Rover' Wi-Fi, then press Connect.</div>
+    </div>
+
+    <script>
+        let ws = null;
+        let isConnected = false;
+        let currentThrottle = 45;
+
+        const statusBadge = document.getElementById('statusBadge');
+        const btnConnect = document.getElementById('btnConnect');
+        const wsUrlInput = document.getElementById('wsUrl');
+        const consoleLog = document.getElementById('consoleLog');
+        const speedSlider = document.getElementById('speedSlider');
+        const speedVal = document.getElementById('speedVal');
+
+        function log(msg) {
+            const el = document.createElement('div');
+            el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            consoleLog.appendChild(el);
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+
+        speedSlider.addEventListener('input', (e) => {
+            currentThrottle = e.target.value;
+            speedVal.textContent = `${currentThrottle}%`;
+        });
+
+        function sendCommand(cmd) {
+            log(`TX: ${cmd}`);
+            if (ws && isConnected) {
+                ws.send(cmd + "\r\n");
+            } else {
+                // If using direct fetch or telnet bridge
+                fetch(`http://${wsUrlInput.value}/cmd?val=${encodeURIComponent(cmd)}`).catch(() => {});
+            }
+        }
+
+        btnConnect.addEventListener('click', () => {
+            if (isConnected) {
+                if (ws) ws.close();
+                setConnected(false);
+                return;
+            }
+
+            const target = wsUrlInput.value.trim();
+            log(`Connecting to ${target}...`);
+
+            try {
+                ws = new WebSocket(`ws://${target}`);
+                ws.onopen = () => {
+                    setConnected(true);
+                    log("Connected via WebSocket!");
+                    sendCommand("STATUS");
+                };
+                ws.onmessage = (e) => {
+                    log(`RX: ${e.data}`);
+                };
+                ws.onclose = () => {
+                    setConnected(false);
+                    log("Disconnected.");
+                };
+                ws.onerror = (e) => {
+                    log("WebSocket error or bridge unavailable.");
+                };
+            } catch (err) {
+                log(`Connection error: ${err}`);
+            }
+        });
+
+        function setConnected(state) {
+            isConnected = state;
+            if (state) {
+                statusBadge.textContent = "CONNECTED";
+                statusBadge.classList.add('connected');
+                btnConnect.textContent = "Disconnect";
+            } else {
+                statusBadge.textContent = "DISCONNECTED";
+                statusBadge.classList.remove('connected');
+                btnConnect.textContent = "Connect";
+            }
+        }
+
+        // Button Listeners with Touch and Mouse support
+        function setupButton(id, pressCmd, releaseCmd = "STOP") {
+            const btn = document.getElementById(id);
+
+            const handlePress = (e) => {
+                e.preventDefault();
+                sendCommand(pressCmd);
+            };
+
+            const handleRelease = (e) => {
+                e.preventDefault();
+                if (releaseCmd) sendCommand(releaseCmd);
+            };
+
+            btn.addEventListener('touchstart', handlePress);
+            btn.addEventListener('touchend', handleRelease);
+            btn.addEventListener('mousedown', handlePress);
+            btn.addEventListener('mouseup', handleRelease);
+        }
+
+        setupButton('btnFwd', 'FORWARD');
+        setupButton('btnBwd', 'BACKWARD');
+        setupButton('btnLeft', 'LEFT');
+        setupButton('btnRight', 'RIGHT');
+        setupButton('btnStop', 'STOP', null);
+
+        document.getElementById('btnEStop').addEventListener('click', () => sendCommand('ESTOP'));
+        document.getElementById('btnReset').addEventListener('click', () => sendCommand('RESET'));
+    </script>
+</body>
+</html>

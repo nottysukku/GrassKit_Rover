@@ -6,6 +6,18 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-u", "16_RaceCar_MotorDriver_Bluetooth_Audio/tools/web_serial_server.py"],
       "port": 8080
+    },
+    {
+      "name": "rover-page-mock",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-I", "17_Rover_MotorDriver_WiFi_ST67W61/firmware/web/mock_server.py"],
+      "port": 8765
+    },
+    {
+      "name": "rover-page-5172",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-I", "17_Rover_MotorDriver_WiFi_ST67W61/firmware/web/mock_server.py", "5172"],
+      "port": 5172
     }
   ]
 }

@@ -1,0 +1,286 @@
+<meta charset="utf-8">
+<title>GrassKit Rover Wiring</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root { --ground:#dfe6f1; --ink:#0b1630; --ink-soft:#4b5d80; --navy:#0b1630; --amber:#f5b301;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif; --body:"IBM Plex Sans","Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",Consolas,monospace; }
+body { margin:0; background:var(--ground); color:var(--ink); font-family:var(--body); width:1800px; }
+.band { background:var(--navy); color:#fff; border-bottom:4px solid #2563eb; }
+.band-inner, .wrap { padding:0 20px; box-sizing:border-box; }
+.band-inner { padding-block:18px 16px; }
+.band h1 { font-family:var(--display); font-weight:700; font-size:40px; line-height:1.05; margin:0; text-transform:uppercase; }
+.band p { margin:8px 0 12px; color:#a9bbe0; font-size:15px; max-width:120ch; line-height:1.5; }
+.badge { display:inline-block; background:var(--amber); color:var(--navy); font-family:var(--display); font-weight:700; letter-spacing:.06em; font-size:16px; padding:6px 14px; border-radius:999px; }
+.wrap { padding-block:16px 22px; display:grid; gap:16px; }
+.legend { display:flex; flex-wrap:wrap; gap:8px 22px; font-size:14px; color:var(--ink-soft); }
+.legend span { display:inline-flex; align-items:center; gap:7px; }
+.legend i { width:26px; border-top:4px solid; display:inline-block; }
+.legend i.dash { border-top-style:dashed; }
+.sheet { margin:0; border-radius:14px; outline:1px solid #c3cfe2; overflow:hidden; }
+.sheet svg { display:block; width:100%; height:auto; }
+footer { background:var(--navy); color:#a9bbe0; padding:14px 20px 18px; font-size:13.5px; line-height:1.55; }
+footer p { margin:0 0 6px; } footer strong { color:#fff; } footer code { font-family:var(--mono); color:#fff; font-size:12.5px; }
+.sv-ink { font-family:var(--display); font-weight:700; fill:var(--ink); }
+.sv-sub { font-family:var(--body); fill:#bfd0f5; }
+.sv-mono { font-family:var(--mono); font-weight:600; fill:#fff; }
+.sv-note { font-family:var(--body); fill:#a9bce6; }
+.sv-dark { font-family:var(--body); fill:var(--ink-soft); }
+.sv-darkmono { font-family:var(--mono); font-weight:600; fill:var(--ink); }
+.sv-alert { font-family:var(--body); font-weight:600; fill:#9a3412; }
+.wire { fill:none; stroke-width:4.5; stroke-linecap:round; stroke-linejoin:round; }
+.wire.fat { stroke-width:6; }
+.wire-dash { stroke-dasharray:11 7; }
+.thin { fill:none; stroke-width:2.5; stroke-linecap:round; }
+.marker circle { fill:#dc2626; stroke:#fff; stroke-width:2.5; }
+.marker text { font-family:var(--body); font-weight:600; font-size:13px; fill:#fff; text-anchor:middle; dominant-baseline:central; }
+</style>
+<header class="band"><div class="band-inner">
+<h1>GrassKit Rover — NUCLEO-L073RZ + X-NUCLEO-67W61M1 → X-STM32MP-RBT01 → 4 × DC wheel motors</h1>
+<p>14 jumper wires carry logic between the stacked Nucleo / ST67W61 Wi-Fi 6 pair and the RBT01's 40-pin CN2 header; two heavy wires bring bench power into CN3; four motors land on CN4 (front) and CN5 (rear).
+Each label gives the physical spot to count to: on the Nucleo hold the USB at the top, on the RBT01 hold CN2 along the top with the silver capacitor on the left.
+Signals on the shield's Arduino pins can be taken from the ST67W61 top sockets (dashed) or the Morpho pin underneath.</p>
+<span class="badge">ST67W61-SAFE PINOUT · M1 PWM ON PC6 · D5 LEFT FREE</span>
+</div></header>
+<main class="wrap">
+<div class="legend"><span><i class="" style="border-color:#f97316"></i>+3V3 logic</span><span><i class="" style="border-color:#111827"></i>GND</span><span><i class="" style="border-color:#7c3aed"></i>EN / FAULT</span><span><i class="" style="border-color:#16a34a"></i>DIR</span><span><i class="" style="border-color:#eab308"></i>PWM</span><span><i class="" style="border-color:#e11d48"></i>VM (bench +)</span><span><i class="" style="border-color:#64748b"></i>motor leads</span><span><i class="dash" style="border-color:#4b5d80"></i>dashed = plug into ST67W61 top socket</span></div>
+<figure class="sheet"><svg viewBox="0 0 1800 1180" xmlns="http://www.w3.org/2000/svg" role="img">
+<rect width="1800" height="1180" fill="#dfe6f1"/>
+<g stroke="#cfd9e8" stroke-width="1"><path d="M0 115H1800"/><path d="M0 230H1800"/><path d="M0 345H1800"/><path d="M0 460H1800"/><path d="M0 575H1800"/><path d="M0 690H1800"/><path d="M0 805H1800"/><path d="M0 920H1800"/><path d="M0 1035H1800"/><path d="M0 1150H1800"/><path d="M200 0V1180"/><path d="M400 0V1180"/><path d="M600 0V1180"/><path d="M800 0V1180"/><path d="M1000 0V1180"/><path d="M1200 0V1180"/><path d="M1400 0V1180"/><path d="M1600 0V1180"/></g>
+<text class="sv-ink" x="40" y="80" font-size="32">NUCLEO-L073RZ + X-NUCLEO-67W61M1</text>
+<text class="sv-dark" x="40" y="104" font-size="13">ST67W61 Wi-Fi 6 shield on top · USB at TOP · "outer" = edge column of Morpho</text>
+<rect x="40" y="130" width="440" height="870" rx="18" fill="#1d3a86" stroke="#0b1630" stroke-width="3"/>
+<g fill="#d4a537"><circle cx="66" cy="156" r="10"/><circle cx="454" cy="156" r="10"/><circle cx="66" cy="974" r="10"/><circle cx="454" cy="974" r="10"/></g>
+<rect x="130" y="116" width="56" height="26" rx="4" fill="#cbd5e1" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-note" x="158" y="160" font-size="11" text-anchor="middle">ST-LINK USB</text>
+<rect x="62" y="190" width="150" height="250" rx="10" fill="#0f5132" stroke="#7ee2a8" stroke-width="2" stroke-dasharray="6 4"/>
+<text class="sv-mono" x="137" y="216" font-size="12" text-anchor="middle">X-NUCLEO-67W61M1</text>
+<text class="sv-note" x="137" y="234" font-size="11" text-anchor="middle">stacked on Arduino</text>
+<text class="sv-note" x="137" y="249" font-size="11" text-anchor="middle">CN5 / CN6 / CN8 / CN9</text>
+<rect x="97" y="270" width="80" height="60" rx="5" fill="#0b1630" stroke="#7ee2a8" stroke-width="1.5"/>
+<text class="sv-mono" x="137" y="305" font-size="13" text-anchor="middle">ST67W61</text>
+<path d="M100 380 l12 -16 l12 16 l12 -16 l12 16 l12 -16 l12 16" class="thin" stroke="#7fd3dd"/>
+<text class="sv-note" x="137" y="402" font-size="11" text-anchor="middle">antenna (bottom)</text>
+<text class="sv-note" x="137" y="422" font-size="10.5" text-anchor="middle">SPI: D10-D13 · D3 · D5 · D6</text>
+<rect x="80" y="500" width="114" height="90" rx="6" fill="#0b1630" stroke="#5b76b8" stroke-width="2"/>
+<text class="sv-mono" x="137" y="540" font-size="14" text-anchor="middle">STM32L073RZ</text>
+<text class="sv-note" x="137" y="560" font-size="11" text-anchor="middle">Cortex-M0+ · 32 MHz</text>
+<text class="sv-sub" x="68" y="630" font-size="13">TIM3 · 4 × PWM</text>
+<text class="sv-note" x="68" y="648" font-size="12">20 kHz · CH2/CH4 inverted</text>
+<text class="sv-note" x="68" y="666" font-size="12">35 ms staggered start</text>
+<text class="sv-note" x="68" y="684" font-size="12">USART2 → WebApp (USB)</text>
+<rect x="62" y="880" width="396" height="84" rx="8" fill="#0b1630" stroke="#f5b301" stroke-width="1.5"/>
+<text x="78" y="904" font-size="13" fill="#f5b301" font-family="IBM Plex Sans, Segoe UI, sans-serif" font-weight="600">Leave PB4 / D5 EMPTY: it is WIFI_CHIP_EN on the shield</text>
+<text class="sv-note" x="78" y="924" font-size="12">CN10 inner 6th from bottom = ST67 CN9 6th hole from bottom.</text>
+<text class="sv-note" x="78" y="942" font-size="12">Also keep off D3, D6, D10-D13 (shield SPI / RDY / BOOT).</text>
+<text class="sv-ink" x="1520" y="80" font-size="32" text-anchor="end">X-STM32MP-RBT01</text>
+<text class="sv-dark" x="1520" y="104" font-size="13" text-anchor="end">2 × STSPIN948 · CN2 along TOP, capacitor LEFT · inner row = odd pins, outer = even</text>
+<rect x="1080" y="130" width="440" height="870" rx="18" fill="#7f1d1d" stroke="#0b1630" stroke-width="3"/>
+<g fill="#d4a537"><circle cx="1106" cy="156" r="10"/><circle cx="1494" cy="156" r="10"/><circle cx="1106" cy="974" r="10"/><circle cx="1494" cy="974" r="10"/></g>
+<text class="sv-sub" x="1128" y="160" font-size="12" fill="#fecaca">40-pin header CN2 (left edge here)</text>
+<rect x="1440" y="198" width="66" height="244" rx="6" fill="#15803d" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-mono" font-size="12" text-anchor="middle" transform="translate(1424 320.0) rotate(-90)">CN5 · U3 · rear axle</text>
+<text class="sv-note" font-size="11" fill="#fecaca" text-anchor="middle" transform="translate(1408 320.0) rotate(-90)">screws 1-2 bottom · 3-4 top</text>
+<circle cx="1473" cy="220" r="9" fill="#cbd5e1" stroke="#0b1630" stroke-width="1.5"/><path d="M1467 214l12 12" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-darkmono" x="1540" y="213" font-size="10.5">OUTB4</text>
+<rect x="1508" y="212" width="24" height="16" rx="3" fill="#64748b" stroke="#fff" stroke-width="2"/>
+<circle cx="1473" cy="260" r="9" fill="#cbd5e1" stroke="#0b1630" stroke-width="1.5"/><path d="M1467 254l12 12" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-darkmono" x="1540" y="253" font-size="10.5">OUTA4</text>
+<rect x="1508" y="252" width="24" height="16" rx="3" fill="#64748b" stroke="#fff" stroke-width="2"/>
+<circle cx="1473" cy="380" r="9" fill="#cbd5e1" stroke="#0b1630" stroke-width="1.5"/><path d="M1467 374l12 12" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-darkmono" x="1540" y="373" font-size="10.5">OUTB3</text>
+<rect x="1508" y="372" width="24" height="16" rx="3" fill="#64748b" stroke="#fff" stroke-width="2"/>
+<circle cx="1473" cy="420" r="9" fill="#cbd5e1" stroke="#0b1630" stroke-width="1.5"/><path d="M1467 414l12 12" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-darkmono" x="1540" y="413" font-size="10.5">OUTA3</text>
+<rect x="1508" y="412" width="24" height="16" rx="3" fill="#64748b" stroke="#fff" stroke-width="2"/>
+<path class="wire" stroke="#64748b" d="M1532 220H1620"/>
+<path class="wire" stroke="#64748b" d="M1532 260H1620"/>
+<circle cx="1660" cy="240" r="40" fill="#1f2937" stroke="#0b1630" stroke-width="3"/>
+<circle cx="1660" cy="240" r="26" fill="#374151" stroke="#9ca3af" stroke-width="2"/>
+<text class="sv-mono" x="1660" y="246" font-size="17" text-anchor="middle">M4</text>
+<text class="sv-darkmono" x="1660" y="298" font-size="13" text-anchor="middle">Rear-Right</text>
+<path class="wire" stroke="#64748b" d="M1532 380H1620"/>
+<path class="wire" stroke="#64748b" d="M1532 420H1620"/>
+<circle cx="1660" cy="400" r="40" fill="#1f2937" stroke="#0b1630" stroke-width="3"/>
+<circle cx="1660" cy="400" r="26" fill="#374151" stroke="#9ca3af" stroke-width="2"/>
+<text class="sv-mono" x="1660" y="406" font-size="17" text-anchor="middle">M3</text>
+<text class="sv-darkmono" x="1660" y="458" font-size="13" text-anchor="middle">Rear-Left</text>
+<rect x="1440" y="558" width="66" height="244" rx="6" fill="#15803d" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-mono" font-size="12" text-anchor="middle" transform="translate(1424 680.0) rotate(-90)">CN4 · U2 · front axle</text>
+<text class="sv-note" font-size="11" fill="#fecaca" text-anchor="middle" transform="translate(1408 680.0) rotate(-90)">screws 1-2 bottom · 3-4 top</text>
+<circle cx="1473" cy="580" r="9" fill="#cbd5e1" stroke="#0b1630" stroke-width="1.5"/><path d="M1467 574l12 12" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-darkmono" x="1540" y="573" font-size="10.5">OUTB2</text>
+<rect x="1508" y="572" width="24" height="16" rx="3" fill="#64748b" stroke="#fff" stroke-width="2"/>
+<circle cx="1473" cy="620" r="9" fill="#cbd5e1" stroke="#0b1630" stroke-width="1.5"/><path d="M1467 614l12 12" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-darkmono" x="1540" y="613" font-size="10.5">OUTA2</text>
+<rect x="1508" y="612" width="24" height="16" rx="3" fill="#64748b" stroke="#fff" stroke-width="2"/>
+<circle cx="1473" cy="740" r="9" fill="#cbd5e1" stroke="#0b1630" stroke-width="1.5"/><path d="M1467 734l12 12" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-darkmono" x="1540" y="733" font-size="10.5">OUTB1</text>
+<rect x="1508" y="732" width="24" height="16" rx="3" fill="#64748b" stroke="#fff" stroke-width="2"/>
+<circle cx="1473" cy="780" r="9" fill="#cbd5e1" stroke="#0b1630" stroke-width="1.5"/><path d="M1467 774l12 12" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-darkmono" x="1540" y="773" font-size="10.5">OUTA1</text>
+<rect x="1508" y="772" width="24" height="16" rx="3" fill="#64748b" stroke="#fff" stroke-width="2"/>
+<path class="wire" stroke="#64748b" d="M1532 580H1620"/>
+<path class="wire" stroke="#64748b" d="M1532 620H1620"/>
+<circle cx="1660" cy="600" r="40" fill="#1f2937" stroke="#0b1630" stroke-width="3"/>
+<circle cx="1660" cy="600" r="26" fill="#374151" stroke="#9ca3af" stroke-width="2"/>
+<text class="sv-mono" x="1660" y="606" font-size="17" text-anchor="middle">M2</text>
+<text class="sv-darkmono" x="1660" y="658" font-size="13" text-anchor="middle">Front-Right</text>
+<path class="wire" stroke="#64748b" d="M1532 740H1620"/>
+<path class="wire" stroke="#64748b" d="M1532 780H1620"/>
+<circle cx="1660" cy="760" r="40" fill="#1f2937" stroke="#0b1630" stroke-width="3"/>
+<circle cx="1660" cy="760" r="26" fill="#374151" stroke="#9ca3af" stroke-width="2"/>
+<text class="sv-mono" x="1660" y="766" font-size="17" text-anchor="middle">M1</text>
+<text class="sv-darkmono" x="1660" y="818" font-size="13" text-anchor="middle">Front-Left</text>
+<text class="sv-dark" x="1660" y="880" font-size="12" text-anchor="middle">Wheel spins backwards?</text>
+<text class="sv-dark" x="1660" y="896" font-size="12" text-anchor="middle">Use "Flip M1..M4" in the</text>
+<text class="sv-dark" x="1660" y="912" font-size="12" text-anchor="middle">WebApp (INVERT:n), no rewiring.</text>
+<circle cx="1410" cy="890" r="34" fill="#cbd5e1" stroke="#0b1630" stroke-width="2.5"/>
+<circle cx="1410" cy="890" r="22" fill="none" stroke="#64748b" stroke-width="2"/>
+<text class="sv-darkmono" x="1410" y="894" font-size="11" text-anchor="middle">330µF</text>
+<text class="sv-note" x="1410" y="938" font-size="11" fill="#fecaca" text-anchor="middle">bulk cap C2</text>
+<rect x="1130" y="930" width="120" height="50" rx="6" fill="#15803d" stroke="#0b1630" stroke-width="2"/>
+<circle cx="1160" cy="952" r="10" fill="#cbd5e1" stroke="#0b1630" stroke-width="1.5"/><path d="M1154 946l12 12" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-mono" x="1160" y="922" font-size="11" text-anchor="middle">VM</text>
+<circle cx="1220" cy="952" r="10" fill="#cbd5e1" stroke="#0b1630" stroke-width="1.5"/><path d="M1214 946l12 12" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-mono" x="1220" y="922" font-size="11" text-anchor="middle">GND</text>
+<text class="sv-mono" x="1270" y="950" font-size="12">CN3 · motor power</text>
+<text class="sv-note" x="1270" y="966" font-size="11" fill="#fecaca">left = VM(+) · right = GND</text>
+<rect x="1148" y="988" width="24" height="16" rx="3" fill="#e11d48" stroke="#fff" stroke-width="2"/>
+<rect x="1208" y="988" width="24" height="16" rx="3" fill="#111827" stroke="#fff" stroke-width="2"/>
+<text class="sv-dark" x="780" y="176" font-size="12.5" text-anchor="middle" font-weight="600">POWER · logic 3V3 + common ground (connect first)</text>
+<text class="sv-dark" x="780" y="290" font-size="12.5" text-anchor="middle" font-weight="600">EN / FAULT · STM32 drives high, STSPIN948 pulls low on fault</text>
+<text class="sv-dark" x="780" y="492" font-size="12.5" text-anchor="middle" font-weight="600">DIR · direction, one GPIO per wheel</text>
+<text class="sv-dark" x="780" y="694" font-size="12.5" text-anchor="middle" font-weight="600">PWM · TIM3 20 kHz, phase-interleaved L / R</text>
+<text class="sv-mono" x="456" y="198" font-size="13" text-anchor="end">ST67 CN6 · 4th hole from top</text>
+<text class="sv-note" x="456" y="213" font-size="11" text-anchor="end">3V3 · same net as CN7-16 (inner, 8th from top)</text>
+<text class="sv-mono" x="1104" y="198" font-size="13">CN2 pin 1 · inner, 1st from L</text>
+<text class="sv-note" x="1104" y="213" font-size="11" fill="#fecaca">3V3 logic supply · square pad</text>
+<path class="wire wire-dash" stroke="#f97316" d="M492 200H1068"/>
+<rect x="468" y="192" width="24" height="16" rx="3" fill="#f97316" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="192" width="24" height="16" rx="3" fill="#f97316" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="200" r="14"/><text x="600" y="200">1</text></g>
+<text class="sv-mono" x="456" y="242" font-size="13" text-anchor="end">CN7 outer · 10th from top</text>
+<text class="sv-note" x="456" y="257" font-size="11" text-anchor="end">GND · CN7-19 (or CN10-20 / ST67 CN6 GND)</text>
+<text class="sv-mono" x="1104" y="242" font-size="13">CN2 pin 6 · outer, 3rd from L</text>
+<text class="sv-note" x="1104" y="257" font-size="11" fill="#fecaca">GND · common ground</text>
+<path class="wire" stroke="#111827" d="M492 244H1068"/>
+<rect x="468" y="236" width="24" height="16" rx="3" fill="#111827" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="236" width="24" height="16" rx="3" fill="#111827" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="244" r="14"/><text x="600" y="244">2</text></g>
+<text class="sv-mono" x="456" y="312" font-size="13" text-anchor="end">CN10 outer · 3rd from bottom</text>
+<text class="sv-note" x="456" y="327" font-size="11" text-anchor="end">PC4 · CN10-34 → M1 EN/FAULT</text>
+<text class="sv-mono" x="1104" y="312" font-size="13">CN2 pin 13 · inner, 7th from L</text>
+<text class="sv-note" x="1104" y="327" font-size="11" fill="#fecaca">M1 EN/FAULT · U2</text>
+<path class="wire" stroke="#7c3aed" d="M492 314H1068"/>
+<rect x="468" y="306" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="306" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="314" r="14"/><text x="600" y="314">3</text></g>
+<text class="sv-mono" x="456" y="356" font-size="13" text-anchor="end">CN10 outer · 3rd from top</text>
+<text class="sv-note" x="456" y="371" font-size="11" text-anchor="end">PC5 · CN10-6 → M2 EN/FAULT</text>
+<text class="sv-mono" x="1104" y="356" font-size="13">CN2 pin 15 · inner, 8th from L</text>
+<text class="sv-note" x="1104" y="371" font-size="11" fill="#fecaca">M2 EN/FAULT · U2</text>
+<path class="wire" stroke="#7c3aed" d="M492 358H1068"/>
+<rect x="468" y="350" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="350" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="358" r="14"/><text x="600" y="358">4</text></g>
+<text class="sv-mono" x="456" y="400" font-size="13" text-anchor="end">CN10 inner · 1st from top</text>
+<text class="sv-note" x="456" y="415" font-size="11" text-anchor="end">PC9 · CN10-1 (above ST67 CN5) → M3 EN</text>
+<text class="sv-mono" x="1104" y="400" font-size="13">CN2 pin 16 · outer, 8th from L</text>
+<text class="sv-note" x="1104" y="415" font-size="11" fill="#fecaca">M3 EN/FAULT · U3</text>
+<path class="wire" stroke="#7c3aed" d="M492 402H1068"/>
+<rect x="468" y="394" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="394" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="402" r="14"/><text x="600" y="402">5</text></g>
+<text class="sv-mono" x="456" y="444" font-size="13" text-anchor="end">CN10 outer · 1st from top</text>
+<text class="sv-note" x="456" y="459" font-size="11" text-anchor="end">PC8 · CN10-2 → M4 EN/FAULT</text>
+<text class="sv-mono" x="1104" y="444" font-size="13">CN2 pin 18 · outer, 9th from L</text>
+<text class="sv-note" x="1104" y="459" font-size="11" fill="#fecaca">M4 EN/FAULT · U3</text>
+<path class="wire" stroke="#7c3aed" d="M492 446H1068"/>
+<rect x="468" y="438" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="438" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="446" r="14"/><text x="600" y="446">6</text></g>
+<text class="sv-mono" x="456" y="514" font-size="13" text-anchor="end">ST67 CN8 · 1st hole from bottom</text>
+<text class="sv-note" x="456" y="529" font-size="11" text-anchor="end">PC0 · A5 · CN7-38 → M1 DIR</text>
+<text class="sv-mono" x="1104" y="514" font-size="13">CN2 pin 23 · inner, 12th from L</text>
+<text class="sv-note" x="1104" y="529" font-size="11" fill="#fecaca">M1 DIR</text>
+<path class="wire wire-dash" stroke="#16a34a" d="M492 516H1068"/>
+<rect x="468" y="508" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="508" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="516" r="14"/><text x="600" y="516">7</text></g>
+<text class="sv-mono" x="456" y="558" font-size="13" text-anchor="end">ST67 CN8 · 2nd hole from bottom</text>
+<text class="sv-note" x="456" y="573" font-size="11" text-anchor="end">PC1 · A4 · CN7-36 → M2 DIR</text>
+<text class="sv-mono" x="1104" y="558" font-size="13">CN2 pin 24 · outer, 12th from L</text>
+<text class="sv-note" x="1104" y="573" font-size="11" fill="#fecaca">M2 DIR</text>
+<path class="wire wire-dash" stroke="#16a34a" d="M492 560H1068"/>
+<rect x="468" y="552" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="552" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="560" r="14"/><text x="600" y="560">8</text></g>
+<text class="sv-mono" x="456" y="602" font-size="13" text-anchor="end">CN7 outer · 2nd from bottom</text>
+<text class="sv-note" x="456" y="617" font-size="11" text-anchor="end">PC2 · CN7-35 → M3 DIR</text>
+<text class="sv-mono" x="1104" y="602" font-size="13">CN2 pin 19 · inner, 10th from L</text>
+<text class="sv-note" x="1104" y="617" font-size="11" fill="#fecaca">M3 DIR</text>
+<path class="wire" stroke="#16a34a" d="M492 604H1068"/>
+<rect x="468" y="596" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="596" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="604" r="14"/><text x="600" y="604">9</text></g>
+<text class="sv-mono" x="456" y="646" font-size="13" text-anchor="end">CN7 outer · 1st from bottom</text>
+<text class="sv-note" x="456" y="661" font-size="11" text-anchor="end">PC3 · CN7-37 → M4 DIR</text>
+<text class="sv-mono" x="1104" y="646" font-size="13">CN2 pin 21 · inner, 11th from L</text>
+<text class="sv-note" x="1104" y="661" font-size="11" fill="#fecaca">M4 DIR</text>
+<path class="wire" stroke="#16a34a" d="M492 648H1068"/>
+<rect x="468" y="640" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="640" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="648" r="14"/><text x="600" y="648">10</text></g>
+<text class="sv-mono" x="456" y="716" font-size="13" text-anchor="end">CN10 outer · 2nd from top</text>
+<text class="sv-note" x="456" y="731" font-size="11" text-anchor="end">PC6 · TIM3_CH1 · CN10-4 → M1 PWM</text>
+<text class="sv-mono" x="1104" y="716" font-size="13">CN2 pin 32 · outer, 5th from R</text>
+<text class="sv-note" x="1104" y="731" font-size="11" fill="#fecaca">M1 PWM (16th from L)</text>
+<path class="wire" stroke="#eab308" d="M492 718H1068"/>
+<rect x="468" y="710" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="710" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="718" r="14"/><text x="600" y="718">11</text></g>
+<text class="sv-mono" x="456" y="760" font-size="13" text-anchor="end">ST67 CN9 · 5th hole from bottom</text>
+<text class="sv-note" x="456" y="775" font-size="11" text-anchor="end">PB5 · D4 · TIM3_CH2 · CN10-29 → M2 PWM</text>
+<text class="sv-mono" x="1104" y="760" font-size="13">CN2 pin 33 · inner, 4th from R</text>
+<text class="sv-note" x="1104" y="775" font-size="11" fill="#fecaca">M2 PWM (17th from L)</text>
+<path class="wire wire-dash" stroke="#eab308" d="M492 762H1068"/>
+<rect x="468" y="754" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="754" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="762" r="14"/><text x="600" y="762">12</text></g>
+<text class="sv-mono" x="456" y="804" font-size="13" text-anchor="end">ST67 CN8 · 3rd hole from bottom</text>
+<text class="sv-note" x="456" y="819" font-size="11" text-anchor="end">PB0 · A3 · TIM3_CH3 · CN7-34 → M3 PWM</text>
+<text class="sv-mono" x="1104" y="804" font-size="13">CN2 pin 31 · inner, 5th from R</text>
+<text class="sv-note" x="1104" y="819" font-size="11" fill="#fecaca">M3 PWM (16th from L)</text>
+<path class="wire wire-dash" stroke="#eab308" d="M492 806H1068"/>
+<rect x="468" y="798" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="798" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="806" r="14"/><text x="600" y="806">13</text></g>
+<text class="sv-mono" x="456" y="848" font-size="13" text-anchor="end">CN10 outer · 8th from bottom</text>
+<text class="sv-note" x="456" y="863" font-size="11" text-anchor="end">PB1 · TIM3_CH4 · CN10-24 → M4 PWM</text>
+<text class="sv-mono" x="1104" y="848" font-size="13">CN2 pin 36 · outer, 3rd from R</text>
+<text class="sv-note" x="1104" y="863" font-size="11" fill="#fecaca">M4 PWM (18th from L)</text>
+<path class="wire" stroke="#eab308" d="M492 850H1068"/>
+<rect x="468" y="842" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="842" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="600" cy="850" r="14"/><text x="600" y="850">14</text></g>
+<rect x="620" y="1040" width="280" height="110" rx="12" fill="#0b1630" stroke="#334155" stroke-width="3"/>
+<text class="sv-mono" x="640" y="1070" font-size="15">BENCH DC SUPPLY</text>
+<rect x="640" y="1084" width="120" height="40" rx="4" fill="#052e16" stroke="#22c55e" stroke-width="1.5"/>
+<text x="700" y="1111" font-size="20" fill="#4ade80" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">9.0 V</text>
+<text class="sv-note" x="640" y="1142" font-size="11">set 8-12 V · limit ≈ 0.54 A</text>
+<circle cx="870" cy="1075" r="11" fill="#e11d48" stroke="#fff" stroke-width="2"/><text class="sv-mono" x="842" y="1080" font-size="14">+</text>
+<circle cx="870" cy="1115" r="11" fill="#111827" stroke="#fff" stroke-width="2"/><text class="sv-mono" x="842" y="1120" font-size="14">−</text>
+<path class="wire fat" stroke="#e11d48" d="M881 1075H1160V1004"/>
+<path class="wire fat" stroke="#111827" d="M881 1115H1220V1004"/>
+<g class="marker"><circle cx="980" cy="1075" r="14"/><text x="980" y="1075">15</text></g>
+<g class="marker"><circle cx="1020" cy="1115" r="14"/><text x="1020" y="1115">16</text></g>
+<text class="sv-alert" x="320" y="1080" font-size="12.5" text-anchor="middle">Not 6 V (UVLO 5.2 V) · not 20 V (inrush trips 0.54 A)</text>
+<text class="sv-dark" x="320" y="1100" font-size="12" text-anchor="middle">Motor GND and logic GND meet on the RBT01 (wire 2).</text>
+<text class="sv-dark" x="320" y="1118" font-size="12" text-anchor="middle">Prop the chassis up: wheels free in the air for bench tests.</text>
+</svg></figure>
+</main>
+<footer>
+<p><strong>Signal chain:</strong> STM32L073RZ TIM3 CH1-CH4 (PC6 / PB5 / PB0 / PB1) + DIR (PC0-PC3) + EN/FAULT (PC4 / PC5 / PC9 / PC8) → RBT01 CN2 → STSPIN948 U2 (M1, M2 → CN4) and U3 (M3, M4 → CN5). Bench supply → CN3 VM / GND. Nucleo on its own ST-LINK USB (WebApp via USART2, 115200 baud).</p>
+<p><strong>Sources:</strong> NUCLEO-L073RZ user manual UM1724 (Fig. 20, Table 30) and MB1136 schematic · X-STM32MP-RBT01 user manual UM3482 (Fig. 2, 4, 13, Table 11) · X-NUCLEO-67W61M1 Arduino pin use (D3, D5, D6, D10-D13) · firmware <code>17_Rover_MotorDriver_WiFi_ST67W61/firmware/Core/Inc/hardware_config.h</code>.</p>
+</footer>

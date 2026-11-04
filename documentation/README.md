@@ -5,6 +5,17 @@ Folders are numbered in reading order: start with the board being driven, work b
 
 Every PDF was opened after download to confirm it is the document its filename says it is; the revision shown below is the one printed in the file.
 
+## 00 — Project status
+
+Written for this project, not a vendor document.
+
+| File | Use it for |
+|:---|:---|
+| `GrassKit_Rover_Project_Status_2026-10-12.pdf` | Where the build stands on 12 October 2026: the goal (two rovers that mow any lawn on their own), what has been built and bench-tested, the open issues, and the proposed next stages from Bluetooth control through SLAM, the cutting head and the second rover |
+| `build_status_pdf.py` | Source of that PDF. Edit the text in it and run `python build_status_pdf.py <output.pdf>` to regenerate (needs `reportlab`; uses the Windows Segoe UI and Consolas fonts) |
+| `GrassKit_Rover_Final_BOM_2026-11-04.xlsx` | The full parts list for two rovers plus spares: 70 lines with purpose, quantity, estimated INR price, priority and order links (Robu, Amazon.in, Mouser India, ST eStore). Tabs: Summary (totals, editable rover count), BOM, Design basis (torque, battery runtime and line-wear calculations), Software (free tools) |
+| `IRIS7.0_ProjectProgressReview_GrassKit_2026-11-04.pptx` | IRIS 7.0 review deck updated after the 28 Oct feedback: new slides on system architecture, hardware purpose, ESD and battery protection, cutter wear monitoring, Wi-Fi robustness against motor noise, and Gazebo + micro-ROS simulation (slides 6-12) |
+
 ## 01 — Motor driver board: X-STM32MP-RBT01
 
 | File | Document | Use it for |
