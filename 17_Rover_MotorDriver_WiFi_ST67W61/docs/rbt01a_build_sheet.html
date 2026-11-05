@@ -1,0 +1,583 @@
+<title>RBT01A Rover Build Sheet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root {
+  /* Layout: navy title band, then full-width wiring sheets on a blue-grey drafting ground, then three working cards. */
+  --ground: #dfe6f1; --paper: #f4f7fb; --ink: #0b1630; --ink-soft: #4b5d80; --navy: #0b1630;
+  --on-navy: #ffffff; --band-text: #a9bbe0; --amber: #f5b301; --rule: #c3cfe2; --accent: #2563eb;
+  --code-fg: #e2e8f0; --ok: #15803d; --fix: #b45309; --bad: #b91c1c;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", Consolas, monospace;
+  color-scheme: light;
+}
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.png { width: 1800px; }
+.gutter { padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.band { background: var(--navy); color: var(--on-navy); border-bottom: 4px solid var(--accent); }
+.band .gutter { padding-block: 18px 16px; }
+.band h1 { font-family: var(--display); font-weight: 700; font-size: clamp(28px, 4vw, 40px); line-height: 1.05; margin: 0; text-transform: uppercase; text-wrap: balance; }
+.band p { margin: 8px 0 12px; color: var(--band-text); max-width: 120ch; }
+.badge { display: inline-block; background: var(--amber); color: var(--navy); font-family: var(--display); font-weight: 700; letter-spacing: .06em; font-size: 17px; padding: 6px 14px; border-radius: 999px; }
+main.gutter { padding-block: 16px 24px; display: grid; gap: 22px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--ink-soft); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { width: 26px; border-top: 4px solid; display: inline-block; }
+.block { display: grid; gap: 8px; min-width: 0; }
+.block h2 { font-family: var(--display); font-weight: 700; font-size: 26px; letter-spacing: .02em; text-transform: uppercase; margin: 0; }
+.block > p { margin: 0; color: var(--ink-soft); max-width: 110ch; }
+.sheet { margin: 0; border-radius: 14px; outline: 1px solid var(--rule); overflow-x: auto; background: var(--ground); }
+.sheet svg { display: block; width: 100%; min-width: 980px; height: auto; }
+.png .sheet svg { min-width: 0; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; align-items: start; }
+.card { background: var(--paper); border: 1px solid var(--rule); border-radius: 12px; padding: 16px 18px 18px; display: grid; gap: 10px; min-width: 0; }
+.card h3 { font-family: var(--display); font-weight: 700; font-size: 21px; text-transform: uppercase; letter-spacing: .03em; margin: 0; }
+.card p, .card li { margin: 0; }
+.card ul, .card ol { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+pre { margin: 0; background: var(--navy); color: var(--code-fg); font-family: var(--mono); font-size: 13.5px; line-height: 1.6; padding: 12px 14px; border-radius: 8px; overflow-x: auto; }
+pre b { color: var(--amber); font-weight: 600; }
+code { font-family: var(--mono); font-size: .92em; background: #e3e9f3; padding: 1px 5px; border-radius: 4px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 6px 8px; border-top: 1px solid var(--rule); }
+th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-soft); border-top: 0; }
+.tbl { overflow-x: auto; }
+.ok { color: var(--ok); font-weight: 600; } .fix { color: var(--fix); font-weight: 600; } .bad { color: var(--bad); font-weight: 600; }
+footer { background: var(--navy); color: var(--band-text); font-size: 13.5px; line-height: 1.55; }
+footer .gutter { padding-block: 14px 18px; }
+footer p { margin: 0 0 6px; } footer strong { color: var(--on-navy); }
+footer code { background: #1c2c52; color: var(--on-navy); }
+.sv-ink { font-family: var(--display); font-weight: 700; fill: var(--ink); }
+.sv-sub { font-family: var(--body); fill: #bfd0f5; }
+.sv-amber { font-family: var(--body); font-weight: 600; fill: var(--amber); letter-spacing: .04em; }
+.sv-mono { font-family: var(--mono); font-weight: 600; fill: #ffffff; }
+.sv-note { font-family: var(--body); fill: #b9c8ea; }
+.sv-faint { font-family: var(--body); fill: #9aa8c8; }
+.sv-dark { font-family: var(--body); fill: var(--ink-soft); }
+.sv-darkmono { font-family: var(--mono); font-weight: 600; fill: var(--ink); }
+.sv-alert { font-family: var(--body); font-weight: 600; fill: #9a3412; }
+.wire { fill: none; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+.wire.fat { stroke-width: 7; }
+.marker circle { fill: #dc2626; stroke: #ffffff; stroke-width: 2.5; }
+.marker text { font-family: var(--body); font-weight: 600; font-size: 13px; fill: #ffffff; text-anchor: middle; dominant-baseline: central; }
+@media print { .sheet { overflow: visible; } .sheet svg { min-width: 0; } }
+</style>
+<div id="page"><header class="band"><div class="gutter">
+<h1>GrassKit rover — X-STM32MP-RBT01 (XMP$RBT01A) → 4 × TT gear motors</h1>
+<p>Build sheet for the replacement motor board. Sheet A shows where each motor's two wires are soldered on the underside of the RBT01 and where motor power goes. Sheet B shows the 14 plug-in jumper wires from the NUCLEO-L073RZ. Below them: meter checks and the serial commands that set each wheel's direction.</p>
+<span class="badge">RULE · BLACK → 2A / 2B · RED → 1A / 1B</span>
+</div></header><main class="gutter"><div class="legend"><span><i style="border-color:#dc2626"></i>red motor lead</span><span><i style="border-color:#111827"></i>black motor lead</span><span><i style="border-color:#e11d48"></i>motor power +</span><span><i style="border-color:#111827"></i>GND</span><span><i style="border-color:#f97316"></i>+3V3 logic</span><span><i style="border-color:#7c3aed"></i>enable / fault</span><span><i style="border-color:#16a34a"></i>direction</span><span><i style="border-color:#eab308"></i>speed (PWM)</span></div><section class="block"><h2>Sheet A · Motors and power, soldered</h2><p>Solder each motor's two leads to the pin tails on the underside of the board. Numbers 1–8 are the eight motor joints, 9–10 the motor power.</p><figure class="sheet"><svg viewBox="0 0 1800 1250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sheet A: which motor wire is soldered to which RBT01 pin">
+<rect width="1800" height="1250" fill="#dfe6f1"/><g stroke="#cfd9e8" stroke-width="1"><path d="M0 115H1800"/><path d="M0 230H1800"/><path d="M0 345H1800"/><path d="M0 460H1800"/><path d="M0 575H1800"/><path d="M0 690H1800"/><path d="M0 805H1800"/><path d="M0 920H1800"/><path d="M0 1035H1800"/><path d="M0 1150H1800"/><path d="M200 0V1250"/><path d="M400 0V1250"/><path d="M600 0V1250"/><path d="M800 0V1250"/><path d="M1000 0V1250"/><path d="M1200 0V1250"/><path d="M1400 0V1250"/><path d="M1600 0V1250"/></g>
+<text class="sv-ink" x="40" y="72" font-size="30">THE ROVER · SEEN FROM ABOVE</text>
+<text class="sv-dark" x="40" y="98" font-size="14">Front = the end the arrows stamped on the top plate</text>
+<text class="sv-dark" x="40" y="116" font-size="14">point to. The RBT01 sits on that front half.</text>
+<path d="M280 134 l36 42 h-21 v40 h-30 v-40 h-21 z" fill="#0b1630"/>
+<text class="sv-darkmono" x="280" y="244" font-size="15" text-anchor="middle">FRONT</text>
+<rect x="170" y="258" width="220" height="640" rx="10" fill="#c2302b" stroke="#7f1d1d" stroke-width="3"/>
+<rect x="88" y="278" width="70" height="170" rx="18" fill="#1f2937" stroke="#0b1630" stroke-width="2"/>
+<g stroke="#4b5563" stroke-width="3"><path d="M98 296h50"/><path d="M98 315h50"/><path d="M98 334h50"/><path d="M98 353h50"/><path d="M98 372h50"/><path d="M98 391h50"/><path d="M98 410h50"/></g>
+<rect x="402" y="278" width="70" height="170" rx="18" fill="#1f2937" stroke="#0b1630" stroke-width="2"/>
+<g stroke="#4b5563" stroke-width="3"><path d="M412 296h50"/><path d="M412 315h50"/><path d="M412 334h50"/><path d="M412 353h50"/><path d="M412 372h50"/><path d="M412 391h50"/><path d="M412 410h50"/></g>
+<rect x="88" y="712" width="70" height="170" rx="18" fill="#1f2937" stroke="#0b1630" stroke-width="2"/>
+<g stroke="#4b5563" stroke-width="3"><path d="M98 730h50"/><path d="M98 749h50"/><path d="M98 768h50"/><path d="M98 787h50"/><path d="M98 806h50"/><path d="M98 825h50"/><path d="M98 844h50"/></g>
+<rect x="402" y="712" width="70" height="170" rx="18" fill="#1f2937" stroke="#0b1630" stroke-width="2"/>
+<g stroke="#4b5563" stroke-width="3"><path d="M412 730h50"/><path d="M412 749h50"/><path d="M412 768h50"/><path d="M412 787h50"/><path d="M412 806h50"/><path d="M412 825h50"/><path d="M412 844h50"/></g>
+<text class="sv-dark" x="123" y="270" font-size="11" text-anchor="middle">mecanum</text>
+<rect x="184" y="288" width="66" height="122" rx="7" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>
+<rect x="193" y="410" width="48" height="40" rx="6" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+<text class="sv-darkmono" x="217" y="346" font-size="22" text-anchor="middle">M1</text>
+<text class="sv-darkmono" x="217" y="368" font-size="13" text-anchor="middle">FL</text>
+<rect x="310" y="288" width="66" height="122" rx="7" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>
+<rect x="319" y="410" width="48" height="40" rx="6" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+<text class="sv-darkmono" x="343" y="346" font-size="22" text-anchor="middle">M2</text>
+<text class="sv-darkmono" x="343" y="368" font-size="13" text-anchor="middle">FR</text>
+<rect x="184" y="748" width="66" height="122" rx="7" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>
+<rect x="193" y="708" width="48" height="40" rx="6" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+<text class="sv-darkmono" x="217" y="806" font-size="22" text-anchor="middle">M3</text>
+<text class="sv-darkmono" x="217" y="828" font-size="13" text-anchor="middle">RL</text>
+<rect x="310" y="748" width="66" height="122" rx="7" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>
+<rect x="319" y="708" width="48" height="40" rx="6" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+<text class="sv-darkmono" x="343" y="806" font-size="22" text-anchor="middle">M4</text>
+<text class="sv-darkmono" x="343" y="828" font-size="13" text-anchor="middle">RR</text>
+<path d="M158 348H184M376 348H402" stroke="#0b1630" stroke-width="5"/>
+<path d="M158 808H184M376 808H402" stroke="#0b1630" stroke-width="5"/>
+<rect x="200" y="470" width="160" height="104" rx="8" fill="#3f2b72" stroke="#0b1630" stroke-width="2.5"/>
+<text class="sv-mono" x="280" y="510" font-size="16" text-anchor="middle">RBT01</text>
+<text class="sv-note" x="280" y="530" font-size="11" text-anchor="middle">motor pins on</text>
+<text class="sv-note" x="280" y="545" font-size="11" text-anchor="middle">its underside</text>
+<path d="M214 450L219 470" stroke="#111827" stroke-width="3"/><path d="M220 450L225 470" stroke="#dc2626" stroke-width="3"/>
+<path d="M340 450L335 470" stroke="#111827" stroke-width="3"/><path d="M346 450L341 470" stroke="#dc2626" stroke-width="3"/>
+<path d="M214 708L219 574" stroke="#111827" stroke-width="3"/><path d="M220 708L225 574" stroke="#dc2626" stroke-width="3"/>
+<path d="M340 708L335 574" stroke="#111827" stroke-width="3"/><path d="M346 708L341 574" stroke="#dc2626" stroke-width="3"/>
+<text class="sv-darkmono" x="280" y="934" font-size="14" text-anchor="middle">M1 front-left  ·  M2 front-right</text>
+<text class="sv-darkmono" x="280" y="956" font-size="14" text-anchor="middle">M3 rear-left  ·  M4 rear-right</text>
+<text class="sv-dark" x="280" y="978" font-size="12.5" text-anchor="middle">(these are the firmware&#x27;s motor numbers)</text>
+<rect x="40" y="1012" width="480" height="206" rx="10" fill="#0b1630" stroke="#f5b301" stroke-width="2"/>
+<text class="sv-amber" x="60" y="1042" font-size="15">AFTER SOLDERING · METER, NO POWER</text>
+<text class="sv-sub" x="60" y="1072" font-size="14">•  Across one motor&#x27;s two pins: a few ohms</text>
+<text class="sv-sub" x="60" y="1096" font-size="14">•  Middle pair 1B ↔ 1A: not a short</text>
+<text class="sv-sub" x="60" y="1120" font-size="14">•  Any motor pin ↔ GND: open</text>
+<text class="sv-sub" x="60" y="1144" font-size="14">•  CN3 + ↔ GND: not a short (reading climbs)</text>
+<text class="sv-sub" x="60" y="1168" font-size="14">•  CN3 GND ↔ CN2 pin 6: beeps</text>
+<text class="sv-sub" x="60" y="1192" font-size="14">•  No solder blob between neighbouring pins</text>
+<text class="sv-ink" x="1760" y="72" font-size="30" text-anchor="end">X-STM32MP-RBT01 · UNDERSIDE</text>
+<text class="sv-dark" x="1760" y="98" font-size="14" text-anchor="end">Board turned over, as in your photo: green blocks along the top edge,</text>
+<text class="sv-dark" x="1760" y="116" font-size="14" text-anchor="end">black 40-pin socket on the right. Solder on the pin tails on this side.</text>
+<rect x="620" y="566" width="1120" height="444" rx="18" fill="#3f2b72" stroke="#0b1630" stroke-width="3"/>
+<g fill="#d4a537" stroke="#0b1630" stroke-width="1.5"><circle cx="652" cy="598" r="10"/><circle cx="1712" cy="598" r="10"/><circle cx="652" cy="980" r="10"/><circle cx="1712" cy="986" r="10"/></g>
+<rect x="728" y="538" width="304" height="28" rx="4" fill="#16a34a" stroke="#0b1630" stroke-width="2"/>
+<rect x="1128" y="538" width="304" height="28" rx="4" fill="#16a34a" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-darkmono" x="800" y="150" font-size="14" text-anchor="middle">M2 · FRONT-RIGHT</text>
+<rect x="736" y="164" width="128" height="68" rx="8" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>
+<text class="sv-darkmono" x="800" y="206" font-size="22" text-anchor="middle">M2</text>
+<rect x="754" y="232" width="92" height="24" rx="5" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+<rect x="754" y="256" width="12" height="10" fill="#94a3b8"/>
+<path class="wire" stroke="#111827" d="M760 266V592"/>
+<text class="sv-dark" x="750" y="300" font-size="11.5" text-anchor="end">black</text>
+<g class="marker"><circle cx="760" cy="430" r="15"/><text x="760" y="430">3</text></g>
+<rect x="834" y="256" width="12" height="10" fill="#94a3b8"/>
+<path class="wire" stroke="#dc2626" d="M840 266V592"/>
+<text class="sv-dark" x="850" y="300" font-size="11.5">red</text>
+<g class="marker"><circle cx="840" cy="430" r="15"/><text x="840" y="430">4</text></g>
+<text class="sv-darkmono" x="960" y="150" font-size="14" text-anchor="middle">M1 · FRONT-LEFT</text>
+<rect x="896" y="164" width="128" height="68" rx="8" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>
+<text class="sv-darkmono" x="960" y="206" font-size="22" text-anchor="middle">M1</text>
+<rect x="914" y="232" width="92" height="24" rx="5" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+<rect x="914" y="256" width="12" height="10" fill="#94a3b8"/>
+<path class="wire" stroke="#dc2626" d="M920 266V592"/>
+<text class="sv-dark" x="910" y="300" font-size="11.5" text-anchor="end">red</text>
+<g class="marker"><circle cx="920" cy="430" r="15"/><text x="920" y="430">2</text></g>
+<rect x="994" y="256" width="12" height="10" fill="#94a3b8"/>
+<path class="wire" stroke="#111827" d="M1000 266V592"/>
+<text class="sv-dark" x="1010" y="300" font-size="11.5">black</text>
+<g class="marker"><circle cx="1000" cy="430" r="15"/><text x="1000" y="430">1</text></g>
+<text class="sv-darkmono" x="1200" y="150" font-size="14" text-anchor="middle">M4 · REAR-RIGHT</text>
+<rect x="1136" y="164" width="128" height="68" rx="8" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>
+<text class="sv-darkmono" x="1200" y="206" font-size="22" text-anchor="middle">M4</text>
+<rect x="1154" y="232" width="92" height="24" rx="5" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+<rect x="1154" y="256" width="12" height="10" fill="#94a3b8"/>
+<path class="wire" stroke="#111827" d="M1160 266V592"/>
+<text class="sv-dark" x="1150" y="300" font-size="11.5" text-anchor="end">black</text>
+<g class="marker"><circle cx="1160" cy="430" r="15"/><text x="1160" y="430">7</text></g>
+<rect x="1234" y="256" width="12" height="10" fill="#94a3b8"/>
+<path class="wire" stroke="#dc2626" d="M1240 266V592"/>
+<text class="sv-dark" x="1250" y="300" font-size="11.5">red</text>
+<g class="marker"><circle cx="1240" cy="430" r="15"/><text x="1240" y="430">8</text></g>
+<text class="sv-darkmono" x="1360" y="150" font-size="14" text-anchor="middle">M3 · REAR-LEFT</text>
+<rect x="1296" y="164" width="128" height="68" rx="8" fill="#facc15" stroke="#a16207" stroke-width="2.5"/>
+<text class="sv-darkmono" x="1360" y="206" font-size="22" text-anchor="middle">M3</text>
+<rect x="1314" y="232" width="92" height="24" rx="5" fill="#cbd5e1" stroke="#475569" stroke-width="2"/>
+<rect x="1314" y="256" width="12" height="10" fill="#94a3b8"/>
+<path class="wire" stroke="#dc2626" d="M1320 266V592"/>
+<text class="sv-dark" x="1310" y="300" font-size="11.5" text-anchor="end">red</text>
+<g class="marker"><circle cx="1320" cy="430" r="15"/><text x="1320" y="430">6</text></g>
+<rect x="1394" y="256" width="12" height="10" fill="#94a3b8"/>
+<path class="wire" stroke="#111827" d="M1400 266V592"/>
+<text class="sv-dark" x="1410" y="300" font-size="11.5">black</text>
+<g class="marker"><circle cx="1400" cy="430" r="15"/><text x="1400" y="430">5</text></g>
+<circle cx="760" cy="592" r="12" fill="#d4a537" stroke="#0b1630" stroke-width="2"/><circle cx="760" cy="592" r="4" fill="#5c4317"/>
+<text class="sv-mono" x="760" y="632" font-size="19" text-anchor="middle">2B</text>
+<text class="sv-note" x="760" y="654" font-size="12" text-anchor="middle">M2 black</text>
+<text class="sv-faint" x="760" y="672" font-size="10.5" text-anchor="middle">top side: TP5</text>
+<circle cx="840" cy="592" r="12" fill="#d4a537" stroke="#0b1630" stroke-width="2"/><circle cx="840" cy="592" r="4" fill="#5c4317"/>
+<text class="sv-mono" x="840" y="632" font-size="19" text-anchor="middle">1B</text>
+<text class="sv-note" x="840" y="654" font-size="12" text-anchor="middle">M2 red</text>
+<text class="sv-faint" x="840" y="672" font-size="10.5" text-anchor="middle">top side: TP4</text>
+<circle cx="920" cy="592" r="12" fill="#d4a537" stroke="#0b1630" stroke-width="2"/><circle cx="920" cy="592" r="4" fill="#5c4317"/>
+<text class="sv-mono" x="920" y="632" font-size="19" text-anchor="middle">1A</text>
+<text class="sv-note" x="920" y="654" font-size="12" text-anchor="middle">M1 red</text>
+<text class="sv-faint" x="920" y="672" font-size="10.5" text-anchor="middle">top side: TP3</text>
+<circle cx="1000" cy="592" r="12" fill="#d4a537" stroke="#0b1630" stroke-width="2"/><circle cx="1000" cy="592" r="4" fill="#5c4317"/>
+<text class="sv-mono" x="1000" y="632" font-size="19" text-anchor="middle">2A</text>
+<text class="sv-note" x="1000" y="654" font-size="12" text-anchor="middle">M1 black</text>
+<text class="sv-faint" x="1000" y="672" font-size="10.5" text-anchor="middle">top side: TP1</text>
+<circle cx="1160" cy="592" r="12" fill="#d4a537" stroke="#0b1630" stroke-width="2"/><circle cx="1160" cy="592" r="4" fill="#5c4317"/>
+<text class="sv-mono" x="1160" y="632" font-size="19" text-anchor="middle">2B</text>
+<text class="sv-note" x="1160" y="654" font-size="12" text-anchor="middle">M4 black</text>
+<text class="sv-faint" x="1160" y="672" font-size="10.5" text-anchor="middle">top side: TP13</text>
+<circle cx="1240" cy="592" r="12" fill="#d4a537" stroke="#0b1630" stroke-width="2"/><circle cx="1240" cy="592" r="4" fill="#5c4317"/>
+<text class="sv-mono" x="1240" y="632" font-size="19" text-anchor="middle">1B</text>
+<text class="sv-note" x="1240" y="654" font-size="12" text-anchor="middle">M4 red</text>
+<text class="sv-faint" x="1240" y="672" font-size="10.5" text-anchor="middle">top side: TP12</text>
+<circle cx="1320" cy="592" r="12" fill="#d4a537" stroke="#0b1630" stroke-width="2"/><circle cx="1320" cy="592" r="4" fill="#5c4317"/>
+<text class="sv-mono" x="1320" y="632" font-size="19" text-anchor="middle">1A</text>
+<text class="sv-note" x="1320" y="654" font-size="12" text-anchor="middle">M3 red</text>
+<text class="sv-faint" x="1320" y="672" font-size="10.5" text-anchor="middle">top side: TP11</text>
+<circle cx="1400" cy="592" r="12" fill="#d4a537" stroke="#0b1630" stroke-width="2"/><circle cx="1400" cy="592" r="4" fill="#5c4317"/>
+<text class="sv-mono" x="1400" y="632" font-size="19" text-anchor="middle">2A</text>
+<text class="sv-note" x="1400" y="654" font-size="12" text-anchor="middle">M3 black</text>
+<text class="sv-faint" x="1400" y="672" font-size="10.5" text-anchor="middle">top side: TP10</text>
+<text class="sv-mono" x="880" y="708" font-size="14" text-anchor="middle">CN4 · FRONT DRIVER U2</text>
+<text class="sv-note" x="880" y="726" font-size="12" text-anchor="middle">motors 1 and 2</text>
+<text class="sv-mono" x="1280" y="708" font-size="14" text-anchor="middle">CN5 · REAR DRIVER U3</text>
+<text class="sv-note" x="1280" y="726" font-size="12" text-anchor="middle">motors 3 and 4</text>
+<rect x="700" y="752" width="860" height="104" rx="10" fill="#0b1630" stroke="#f5b301" stroke-width="2"/>
+<text class="sv-amber" x="722" y="782" font-size="15">THE RULE · SAME ON ALL FOUR MOTORS</text>
+<text class="sv-mono" x="722" y="812" font-size="16.5">BLACK lead → the 2 pin (2A or 2B)     RED lead → the 1 pin (1A or 1B)</text>
+<text class="sv-note" x="722" y="838" font-size="12.5">Same polarity as the old rear wheels, which the firmware&#x27;s default direction was tuned to.</text>
+<text class="sv-sub" x="1130" y="884" font-size="13" text-anchor="middle">In each block the middle pair (1B, 1A) belongs to two different motors: keep those joints apart.</text>
+<rect x="1648" y="616" width="56" height="350" rx="5" fill="#0b0f1a" stroke="#64748b" stroke-width="2"/>
+<g fill="#475569"><circle cx="1664" cy="628.0" r="3.5"/><circle cx="1688" cy="628.0" r="3.5"/><circle cx="1664" cy="645.5" r="3.5"/><circle cx="1688" cy="645.5" r="3.5"/><circle cx="1664" cy="663.0" r="3.5"/><circle cx="1688" cy="663.0" r="3.5"/><circle cx="1664" cy="680.5" r="3.5"/><circle cx="1688" cy="680.5" r="3.5"/><circle cx="1664" cy="698.0" r="3.5"/><circle cx="1688" cy="698.0" r="3.5"/><circle cx="1664" cy="715.5" r="3.5"/><circle cx="1688" cy="715.5" r="3.5"/><circle cx="1664" cy="733.0" r="3.5"/><circle cx="1688" cy="733.0" r="3.5"/><circle cx="1664" cy="750.5" r="3.5"/><circle cx="1688" cy="750.5" r="3.5"/><circle cx="1664" cy="768.0" r="3.5"/><circle cx="1688" cy="768.0" r="3.5"/><circle cx="1664" cy="785.5" r="3.5"/><circle cx="1688" cy="785.5" r="3.5"/><circle cx="1664" cy="803.0" r="3.5"/><circle cx="1688" cy="803.0" r="3.5"/><circle cx="1664" cy="820.5" r="3.5"/><circle cx="1688" cy="820.5" r="3.5"/><circle cx="1664" cy="838.0" r="3.5"/><circle cx="1688" cy="838.0" r="3.5"/><circle cx="1664" cy="855.5" r="3.5"/><circle cx="1688" cy="855.5" r="3.5"/><circle cx="1664" cy="873.0" r="3.5"/><circle cx="1688" cy="873.0" r="3.5"/><circle cx="1664" cy="890.5" r="3.5"/><circle cx="1688" cy="890.5" r="3.5"/><circle cx="1664" cy="908.0" r="3.5"/><circle cx="1688" cy="908.0" r="3.5"/><circle cx="1664" cy="925.5" r="3.5"/><circle cx="1688" cy="925.5" r="3.5"/><circle cx="1664" cy="943.0" r="3.5"/><circle cx="1688" cy="943.0" r="3.5"/><circle cx="1664" cy="960.5" r="3.5"/><circle cx="1688" cy="960.5" r="3.5"/></g>
+<text class="sv-mono" x="0" y="0" font-size="12" text-anchor="middle" transform="translate(1628 791) rotate(-90)">CN2 · 40-PIN SOCKET · PLUG-IN JUMPERS, SHEET B</text>
+<rect x="668" y="1010" width="154" height="24" rx="4" fill="#16a34a" stroke="#0b1630" stroke-width="2"/>
+<circle cx="700" cy="958" r="13" fill="#d4a537" stroke="#0b1630" stroke-width="2"/><circle cx="700" cy="958" r="4.5" fill="#5c4317"/>
+<text class="sv-mono" x="700" y="930" font-size="13" text-anchor="middle">+ VM</text>
+<circle cx="790" cy="958" r="13" fill="#d4a537" stroke="#0b1630" stroke-width="2"/><circle cx="790" cy="958" r="4.5" fill="#5c4317"/>
+<text class="sv-mono" x="790" y="930" font-size="13" text-anchor="middle">GND</text>
+<text class="sv-mono" x="830" y="950" font-size="14">CN3 · MOTOR POWER IN</text>
+<text class="sv-note" x="830" y="970" font-size="12">Go by the + / GND print beside it.</text>
+<text class="sv-note" x="830" y="987" font-size="12">Its GND pin beeps to CN2 pin 6.</text>
+<path class="wire fat" stroke="#e11d48" d="M700 1075V958"/>
+<path class="wire fat" stroke="#111827" d="M790 1075V958"/>
+<g class="marker"><circle cx="700" cy="1054" r="15"/><text x="700" y="1054">9</text></g>
+<g class="marker"><circle cx="790" cy="1054" r="15"/><text x="790" y="1054">10</text></g>
+<rect x="620" y="1086" width="300" height="122" rx="12" fill="#0b1630" stroke="#334155" stroke-width="3"/>
+<circle cx="700" cy="1086" r="11" fill="#e11d48" stroke="#fff" stroke-width="2"/>
+<circle cx="790" cy="1086" r="11" fill="#111827" stroke="#fff" stroke-width="2"/>
+<text class="sv-mono" x="640" y="1120" font-size="13.5">BENCH SUPPLY OR 2S PACK</text>
+<rect x="640" y="1134" width="118" height="42" rx="4" fill="#052e16" stroke="#22c55e" stroke-width="1.5"/>
+<text x="699" y="1163" font-size="21" fill="#4ade80" text-anchor="middle" font-family="IBM Plex Mono, Consolas, monospace">9.0 V</text>
+<text class="sv-note" x="772" y="1150" font-size="12">7.4–9 V</text>
+<text class="sv-note" x="772" y="1168" font-size="12">1 A limit per wheel</text>
+<text class="sv-note" x="772" y="1186" font-size="12">2 A for all four</text>
+<text class="sv-dark" x="950" y="1112" font-size="13.5">The yellow TT motors are 3–6 V parts and the firmware does not cap the PWM,</text>
+<text class="sv-dark" x="950" y="1132" font-size="13.5">so keep motor power at 7.4–9 V, not the 14 V pack. Below about 5.2 V the</text>
+<text class="sv-dark" x="950" y="1152" font-size="13.5">driver stays off (undervoltage lock-out).</text>
+<text class="sv-alert" x="950" y="1182" font-size="13.5">Connect power last, after the meter checks pass.</text>
+<rect x="1462" y="140" width="298" height="168" rx="10" fill="#0b1630" stroke="#f5b301" stroke-width="2"/>
+<text class="sv-amber" x="1480" y="168" font-size="15">NO SCREW TERMINALS</text>
+<text class="sv-sub" x="1480" y="196" font-size="14">CN3, CN4 and CN5 are plug-in</text>
+<text class="sv-sub" x="1480" y="217" font-size="14">headers whose screw plug is</text>
+<text class="sv-sub" x="1480" y="238" font-size="14">not fitted. Solder each wire</text>
+<text class="sv-sub" x="1480" y="259" font-size="14">to its pin tail on this side:</text>
+<text class="sv-sub" x="1480" y="280" font-size="14">20 AWG, 18 AWG for CN3.</text>
+</svg></figure></section><section class="block"><h2>Sheet B · Logic wires, plugged in</h2><p>Fourteen plug-in jumper wires from the Nucleo's morpho pins to the RBT01's 40-pin socket. Same signals as before; the front direction wires now come straight from the Nucleo.</p><figure class="sheet"><svg viewBox="0 0 1800 1130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sheet B: jumper wires from the Nucleo to the RBT01 40-pin socket">
+<rect width="1800" height="1130" fill="#dfe6f1"/><g stroke="#cfd9e8" stroke-width="1"><path d="M0 115H1800"/><path d="M0 230H1800"/><path d="M0 345H1800"/><path d="M0 460H1800"/><path d="M0 575H1800"/><path d="M0 690H1800"/><path d="M0 805H1800"/><path d="M0 920H1800"/><path d="M0 1035H1800"/><path d="M200 0V1130"/><path d="M400 0V1130"/><path d="M600 0V1130"/><path d="M800 0V1130"/><path d="M1000 0V1130"/><path d="M1200 0V1130"/><path d="M1400 0V1130"/><path d="M1600 0V1130"/></g>
+<text class="sv-ink" x="40" y="62" font-size="30">NUCLEO-L073RZ + WI-FI SHIELD</text>
+<text class="sv-dark" x="40" y="86" font-size="14">Hold it USB at the top. Morpho CN7 = left pin field, CN10 = right;</text>
+<text class="sv-dark" x="40" y="104" font-size="14">“outer” = the column nearest the board edge. All wires use morpho pins.</text>
+<rect x="40" y="130" width="560" height="830" rx="18" fill="#1d3a86" stroke="#0b1630" stroke-width="3"/>
+<g fill="#d4a537" stroke="#0b1630" stroke-width="1.5"><circle cx="66" cy="156" r="10"/><circle cx="574" cy="156" r="10"/><circle cx="66" cy="934" r="10"/><circle cx="574" cy="934" r="10"/></g>
+<rect x="134" y="116" width="56" height="26" rx="4" fill="#cbd5e1" stroke="#0b1630" stroke-width="2"/>
+<text class="sv-note" x="162" y="160" font-size="11" text-anchor="middle">ST-LINK USB · COM7</text>
+<rect x="62" y="180" width="200" height="220" rx="10" fill="#0f5132" stroke="#7ee2a8" stroke-width="2" stroke-dasharray="6 4"/>
+<text class="sv-mono" x="162" y="208" font-size="12" text-anchor="middle">X-NUCLEO-67W61M1</text>
+<text class="sv-note" x="162" y="226" font-size="11" text-anchor="middle">stacked on the</text>
+<text class="sv-note" x="162" y="241" font-size="11" text-anchor="middle">Arduino sockets</text>
+<rect x="122" y="260" width="80" height="60" rx="5" fill="#0b1630" stroke="#7ee2a8" stroke-width="1.5"/>
+<text class="sv-mono" x="162" y="295" font-size="13" text-anchor="middle">ST67W61</text>
+<text class="sv-note" x="162" y="360" font-size="11" text-anchor="middle">no wires from</text>
+<text class="sv-note" x="162" y="375" font-size="11" text-anchor="middle">its sockets</text>
+<rect x="92" y="440" width="140" height="80" rx="6" fill="#0b1630" stroke="#5b76b8" stroke-width="2"/>
+<text class="sv-mono" x="162" y="476" font-size="14" text-anchor="middle">STM32L073RZ</text>
+<text class="sv-note" x="162" y="496" font-size="11" text-anchor="middle">Cortex-M0+ · 32 MHz</text>
+<rect x="62" y="560" width="200" height="354" rx="8" fill="#0b1630" stroke="#f5b301" stroke-width="1.5"/>
+<text class="sv-amber" x="76" y="588" font-size="13">LEAVE PB4 / D5 EMPTY</text>
+<text class="sv-note" x="76" y="607" font-size="12.5">It is the Wi-Fi shield&#x27;s</text>
+<text class="sv-note" x="76" y="626" font-size="12.5">CHIP_EN line.</text>
+<text class="sv-amber" x="76" y="664" font-size="13">FRONT DIRECTION WIRES</text>
+<text class="sv-note" x="76" y="683" font-size="12.5">Wires 7 and 8 come</text>
+<text class="sv-note" x="76" y="702" font-size="12.5">straight from CN7-38</text>
+<text class="sv-note" x="76" y="721" font-size="12.5">and CN7-36. On the old</text>
+<text class="sv-note" x="76" y="740" font-size="12.5">board they went through</text>
+<text class="sv-note" x="76" y="759" font-size="12.5">the shield&#x27;s A5 / A4</text>
+<text class="sv-note" x="76" y="778" font-size="12.5">sockets, never reached</text>
+<text class="sv-note" x="76" y="797" font-size="12.5">the driver, and the front</text>
+<text class="sv-note" x="76" y="816" font-size="12.5">wheels only turned</text>
+<text class="sv-note" x="76" y="835" font-size="12.5">forward.</text>
+<text class="sv-ink" x="1460" y="62" font-size="30" text-anchor="end">RBT01 · CN2</text>
+<text class="sv-dark" x="1460" y="86" font-size="14" text-anchor="end">Female socket on the underside:</text>
+<text class="sv-dark" x="1460" y="104" font-size="14" text-anchor="end">the wire&#x27;s male end plugs in.</text>
+<rect x="1080" y="130" width="380" height="830" rx="18" fill="#3f2b72" stroke="#0b1630" stroke-width="3"/>
+<g fill="#d4a537" stroke="#0b1630" stroke-width="1.5"><circle cx="1106" cy="156" r="10"/><circle cx="1434" cy="156" r="10"/><circle cx="1106" cy="934" r="10"/><circle cx="1434" cy="934" r="10"/></g>
+<text class="sv-note" x="1110" y="894" font-size="12">Row and spot are counted from</text>
+<text class="sv-note" x="1110" y="911" font-size="12">pin 1, the square pad, so they</text>
+<text class="sv-note" x="1110" y="928" font-size="12">hold from either side of the board.</text>
+<text class="sv-dark" x="840" y="176" font-size="12.5" text-anchor="middle" font-weight="600">POWER · logic 3V3 and common ground (connect first)</text>
+<text class="sv-dark" x="840" y="290" font-size="12.5" text-anchor="middle" font-weight="600">ENABLE / FAULT · one per motor</text>
+<text class="sv-dark" x="840" y="492" font-size="12.5" text-anchor="middle" font-weight="600">DIRECTION · one per motor (wires 7 and 8 are the front wheels)</text>
+<text class="sv-dark" x="840" y="694" font-size="12.5" text-anchor="middle" font-weight="600">SPEED · TIM3 PWM, 20 kHz</text>
+<text class="sv-mono" x="576" y="198" font-size="12.5" text-anchor="end">CN7-16 · inner column, 8th from top</text>
+<text class="sv-note" x="576" y="213" font-size="11" text-anchor="end">+3V3</text>
+<text class="sv-mono" x="1104" y="198" font-size="12.5">CN2 pin 1 · edge row, spot 1</text>
+<text class="sv-note" x="1104" y="213" font-size="11">3V3 in</text>
+<path class="wire" stroke="#f97316" d="M612 200H1068"/>
+<rect x="588" y="192" width="24" height="16" rx="3" fill="#f97316" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="192" width="24" height="16" rx="3" fill="#f97316" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="200" r="15"/><text x="840" y="200">1</text></g>
+<text class="sv-mono" x="576" y="242" font-size="12.5" text-anchor="end">CN7-19 · outer column, 10th from top</text>
+<text class="sv-note" x="576" y="257" font-size="11" text-anchor="end">GND</text>
+<text class="sv-mono" x="1104" y="242" font-size="12.5">CN2 pin 6 · inner row, spot 3</text>
+<text class="sv-note" x="1104" y="257" font-size="11">GND</text>
+<path class="wire" stroke="#111827" d="M612 244H1068"/>
+<rect x="588" y="236" width="24" height="16" rx="3" fill="#111827" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="236" width="24" height="16" rx="3" fill="#111827" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="244" r="15"/><text x="840" y="244">2</text></g>
+<text class="sv-mono" x="576" y="312" font-size="12.5" text-anchor="end">CN10-34 · outer column, 3rd from bottom</text>
+<text class="sv-note" x="576" y="327" font-size="11" text-anchor="end">PC4 · M1 enable / fault</text>
+<text class="sv-mono" x="1104" y="312" font-size="12.5">CN2 pin 13 · edge row, spot 7</text>
+<text class="sv-note" x="1104" y="327" font-size="11">M1 enable</text>
+<path class="wire" stroke="#7c3aed" d="M612 314H1068"/>
+<rect x="588" y="306" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="306" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="314" r="15"/><text x="840" y="314">3</text></g>
+<text class="sv-mono" x="576" y="356" font-size="12.5" text-anchor="end">CN10-6 · outer column, 3rd from top</text>
+<text class="sv-note" x="576" y="371" font-size="11" text-anchor="end">PC5 · M2 enable / fault</text>
+<text class="sv-mono" x="1104" y="356" font-size="12.5">CN2 pin 15 · edge row, spot 8</text>
+<text class="sv-note" x="1104" y="371" font-size="11">M2 enable</text>
+<path class="wire" stroke="#7c3aed" d="M612 358H1068"/>
+<rect x="588" y="350" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="350" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="358" r="15"/><text x="840" y="358">4</text></g>
+<text class="sv-mono" x="576" y="400" font-size="12.5" text-anchor="end">CN10-1 · inner column, 1st from top</text>
+<text class="sv-note" x="576" y="415" font-size="11" text-anchor="end">PC9 · M3 enable / fault</text>
+<text class="sv-mono" x="1104" y="400" font-size="12.5">CN2 pin 16 · inner row, spot 8</text>
+<text class="sv-note" x="1104" y="415" font-size="11">M3 enable</text>
+<path class="wire" stroke="#7c3aed" d="M612 402H1068"/>
+<rect x="588" y="394" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="394" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="402" r="15"/><text x="840" y="402">5</text></g>
+<text class="sv-mono" x="576" y="444" font-size="12.5" text-anchor="end">CN10-2 · outer column, 1st from top</text>
+<text class="sv-note" x="576" y="459" font-size="11" text-anchor="end">PC8 · M4 enable / fault</text>
+<text class="sv-mono" x="1104" y="444" font-size="12.5">CN2 pin 18 · inner row, spot 9</text>
+<text class="sv-note" x="1104" y="459" font-size="11">M4 enable</text>
+<path class="wire" stroke="#7c3aed" d="M612 446H1068"/>
+<rect x="588" y="438" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="438" width="24" height="16" rx="3" fill="#7c3aed" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="446" r="15"/><text x="840" y="446">6</text></g>
+<text class="sv-mono" x="576" y="514" font-size="12.5" text-anchor="end">CN7-38 · inner column, 1st from bottom</text>
+<text class="sv-note" x="576" y="529" font-size="11" text-anchor="end">PC0 · M1 direction</text>
+<text class="sv-mono" x="1104" y="514" font-size="12.5">CN2 pin 23 · edge row, spot 12</text>
+<text class="sv-note" x="1104" y="529" font-size="11">M1 direction</text>
+<path class="wire" stroke="#16a34a" d="M612 516H1068"/>
+<rect x="588" y="508" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="508" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="516" r="15"/><text x="840" y="516">7</text></g>
+<text class="sv-mono" x="576" y="558" font-size="12.5" text-anchor="end">CN7-36 · inner column, 2nd from bottom</text>
+<text class="sv-note" x="576" y="573" font-size="11" text-anchor="end">PC1 · M2 direction</text>
+<text class="sv-mono" x="1104" y="558" font-size="12.5">CN2 pin 24 · inner row, spot 12</text>
+<text class="sv-note" x="1104" y="573" font-size="11">M2 direction</text>
+<path class="wire" stroke="#16a34a" d="M612 560H1068"/>
+<rect x="588" y="552" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="552" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="560" r="15"/><text x="840" y="560">8</text></g>
+<text class="sv-mono" x="576" y="602" font-size="12.5" text-anchor="end">CN7-35 · outer column, 2nd from bottom</text>
+<text class="sv-note" x="576" y="617" font-size="11" text-anchor="end">PC2 · M3 direction</text>
+<text class="sv-mono" x="1104" y="602" font-size="12.5">CN2 pin 19 · edge row, spot 10</text>
+<text class="sv-note" x="1104" y="617" font-size="11">M3 direction</text>
+<path class="wire" stroke="#16a34a" d="M612 604H1068"/>
+<rect x="588" y="596" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="596" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="604" r="15"/><text x="840" y="604">9</text></g>
+<text class="sv-mono" x="576" y="646" font-size="12.5" text-anchor="end">CN7-37 · outer column, 1st from bottom</text>
+<text class="sv-note" x="576" y="661" font-size="11" text-anchor="end">PC3 · M4 direction</text>
+<text class="sv-mono" x="1104" y="646" font-size="12.5">CN2 pin 21 · edge row, spot 11</text>
+<text class="sv-note" x="1104" y="661" font-size="11">M4 direction</text>
+<path class="wire" stroke="#16a34a" d="M612 648H1068"/>
+<rect x="588" y="640" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="640" width="24" height="16" rx="3" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="648" r="15"/><text x="840" y="648">10</text></g>
+<text class="sv-mono" x="576" y="716" font-size="12.5" text-anchor="end">CN10-4 · outer column, 2nd from top</text>
+<text class="sv-note" x="576" y="731" font-size="11" text-anchor="end">PC6 · TIM3 CH1 · M1 speed</text>
+<text class="sv-mono" x="1104" y="716" font-size="12.5">CN2 pin 32 · inner row, spot 16</text>
+<text class="sv-note" x="1104" y="731" font-size="11">M1 speed</text>
+<path class="wire" stroke="#eab308" d="M612 718H1068"/>
+<rect x="588" y="710" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="710" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="718" r="15"/><text x="840" y="718">11</text></g>
+<text class="sv-mono" x="576" y="760" font-size="12.5" text-anchor="end">CN10-29 · inner column, 5th from bottom</text>
+<text class="sv-note" x="576" y="775" font-size="11" text-anchor="end">PB5 · TIM3 CH2 · M2 speed</text>
+<text class="sv-mono" x="1104" y="760" font-size="12.5">CN2 pin 33 · edge row, spot 17</text>
+<text class="sv-note" x="1104" y="775" font-size="11">M2 speed</text>
+<path class="wire" stroke="#eab308" d="M612 762H1068"/>
+<rect x="588" y="754" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="754" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="762" r="15"/><text x="840" y="762">12</text></g>
+<text class="sv-mono" x="576" y="804" font-size="12.5" text-anchor="end">CN7-34 · inner column, 3rd from bottom</text>
+<text class="sv-note" x="576" y="819" font-size="11" text-anchor="end">PB0 · TIM3 CH3 · M3 speed</text>
+<text class="sv-mono" x="1104" y="804" font-size="12.5">CN2 pin 31 · edge row, spot 16</text>
+<text class="sv-note" x="1104" y="819" font-size="11">M3 speed</text>
+<path class="wire" stroke="#eab308" d="M612 806H1068"/>
+<rect x="588" y="798" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="798" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="806" r="15"/><text x="840" y="806">13</text></g>
+<text class="sv-mono" x="576" y="848" font-size="12.5" text-anchor="end">CN10-24 · outer column, 8th from bottom</text>
+<text class="sv-note" x="576" y="863" font-size="11" text-anchor="end">PB1 · TIM3 CH4 · M4 speed</text>
+<text class="sv-mono" x="1104" y="848" font-size="12.5">CN2 pin 36 · inner row, spot 18</text>
+<text class="sv-note" x="1104" y="863" font-size="11">M4 speed</text>
+<path class="wire" stroke="#eab308" d="M612 850H1068"/>
+<rect x="588" y="842" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<rect x="1068" y="842" width="24" height="16" rx="3" fill="#eab308" stroke="#fff" stroke-width="2"/>
+<g class="marker"><circle cx="840" cy="850" r="15"/><text x="840" y="850">14</text></g>
+<text class="sv-ink" x="1660" y="150" font-size="24" text-anchor="middle">CN2 MAP</text>
+<text class="sv-dark" x="1600" y="186" font-size="11.5" text-anchor="middle">inner</text>
+<text class="sv-dark" x="1600" y="199" font-size="11.5" text-anchor="middle">even</text>
+<text class="sv-dark" x="1680" y="186" font-size="11.5" text-anchor="middle">edge</text>
+<text class="sv-dark" x="1680" y="199" font-size="11.5" text-anchor="middle">odd</text>
+<path d="M1724 206V902" stroke="#0b1630" stroke-width="3"/>
+<text class="sv-dark" x="0" y="0" font-size="11.5" text-anchor="middle" transform="translate(1740 554) rotate(90)">board edge</text>
+<text class="sv-dark" x="1550" y="231" font-size="11" text-anchor="end">1</text>
+<rect x="1566" y="214" width="68" height="26" rx="5" fill="#fecaca" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="232" font-size="12" text-anchor="middle" fill="#0b1630" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">2 5V</text>
+<rect x="1646" y="214" width="68" height="26" rx="0" fill="#f97316" stroke="#0b1630" stroke-width="3"/>
+<text x="1680" y="232" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">1</text>
+<text class="sv-dark" x="1550" y="265" font-size="11" text-anchor="end">2</text>
+<rect x="1566" y="248" width="68" height="26" rx="5" fill="#fecaca" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="266" font-size="12" text-anchor="middle" fill="#0b1630" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">4 5V</text>
+<rect x="1646" y="248" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="266" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">3</text>
+<text class="sv-dark" x="1550" y="299" font-size="11" text-anchor="end">3</text>
+<rect x="1566" y="282" width="68" height="26" rx="5" fill="#111827" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="300" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">6</text>
+<rect x="1646" y="282" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="300" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">5</text>
+<text class="sv-dark" x="1550" y="333" font-size="11" text-anchor="end">4</text>
+<rect x="1566" y="316" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="334" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">8</text>
+<rect x="1646" y="316" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="334" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">7</text>
+<text class="sv-dark" x="1550" y="367" font-size="11" text-anchor="end">5</text>
+<rect x="1566" y="350" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="368" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">10</text>
+<rect x="1646" y="350" width="68" height="26" rx="5" fill="#64748b" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="368" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">9 GND</text>
+<text class="sv-dark" x="1550" y="401" font-size="11" text-anchor="end">6</text>
+<rect x="1566" y="384" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="402" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">12</text>
+<rect x="1646" y="384" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="402" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">11</text>
+<text class="sv-dark" x="1550" y="435" font-size="11" text-anchor="end">7</text>
+<rect x="1566" y="418" width="68" height="26" rx="5" fill="#64748b" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="436" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">14 GND</text>
+<rect x="1646" y="418" width="68" height="26" rx="5" fill="#7c3aed" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="436" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">13</text>
+<text class="sv-dark" x="1550" y="469" font-size="11" text-anchor="end">8</text>
+<rect x="1566" y="452" width="68" height="26" rx="5" fill="#7c3aed" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="470" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">16</text>
+<rect x="1646" y="452" width="68" height="26" rx="5" fill="#7c3aed" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="470" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">15</text>
+<text class="sv-dark" x="1550" y="503" font-size="11" text-anchor="end">9</text>
+<rect x="1566" y="486" width="68" height="26" rx="5" fill="#7c3aed" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="504" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">18</text>
+<rect x="1646" y="486" width="68" height="26" rx="5" fill="#fed7aa" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="504" font-size="12" text-anchor="middle" fill="#0b1630" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">17 3V3</text>
+<text class="sv-dark" x="1550" y="537" font-size="11" text-anchor="end">10</text>
+<rect x="1566" y="520" width="68" height="26" rx="5" fill="#64748b" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="538" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">20 GND</text>
+<rect x="1646" y="520" width="68" height="26" rx="5" fill="#16a34a" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="538" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">19</text>
+<text class="sv-dark" x="1550" y="571" font-size="11" text-anchor="end">11</text>
+<rect x="1566" y="554" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="572" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">22</text>
+<rect x="1646" y="554" width="68" height="26" rx="5" fill="#16a34a" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="572" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">21</text>
+<text class="sv-dark" x="1550" y="605" font-size="11" text-anchor="end">12</text>
+<rect x="1566" y="588" width="68" height="26" rx="5" fill="#16a34a" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="606" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">24</text>
+<rect x="1646" y="588" width="68" height="26" rx="5" fill="#16a34a" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="606" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">23</text>
+<text class="sv-dark" x="1550" y="639" font-size="11" text-anchor="end">13</text>
+<rect x="1566" y="622" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="640" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">26</text>
+<rect x="1646" y="622" width="68" height="26" rx="5" fill="#64748b" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="640" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">25 GND</text>
+<text class="sv-dark" x="1550" y="673" font-size="11" text-anchor="end">14</text>
+<rect x="1566" y="656" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="674" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">28</text>
+<rect x="1646" y="656" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="674" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">27</text>
+<text class="sv-dark" x="1550" y="707" font-size="11" text-anchor="end">15</text>
+<rect x="1566" y="690" width="68" height="26" rx="5" fill="#64748b" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="708" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">30 GND</text>
+<rect x="1646" y="690" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="708" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">29</text>
+<text class="sv-dark" x="1550" y="741" font-size="11" text-anchor="end">16</text>
+<rect x="1566" y="724" width="68" height="26" rx="5" fill="#eab308" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="742" font-size="12" text-anchor="middle" fill="#0b1630" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">32</text>
+<rect x="1646" y="724" width="68" height="26" rx="5" fill="#eab308" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="742" font-size="12" text-anchor="middle" fill="#0b1630" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">31</text>
+<text class="sv-dark" x="1550" y="775" font-size="11" text-anchor="end">17</text>
+<rect x="1566" y="758" width="68" height="26" rx="5" fill="#64748b" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="776" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">34 GND</text>
+<rect x="1646" y="758" width="68" height="26" rx="5" fill="#eab308" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="776" font-size="12" text-anchor="middle" fill="#0b1630" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">33</text>
+<text class="sv-dark" x="1550" y="809" font-size="11" text-anchor="end">18</text>
+<rect x="1566" y="792" width="68" height="26" rx="5" fill="#eab308" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="810" font-size="12" text-anchor="middle" fill="#0b1630" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">36</text>
+<rect x="1646" y="792" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="810" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">35</text>
+<text class="sv-dark" x="1550" y="843" font-size="11" text-anchor="end">19</text>
+<rect x="1566" y="826" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="844" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">38</text>
+<rect x="1646" y="826" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="844" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">37</text>
+<text class="sv-dark" x="1550" y="877" font-size="11" text-anchor="end">20</text>
+<rect x="1566" y="860" width="68" height="26" rx="5" fill="#eef2f8" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1600" y="878" font-size="12" text-anchor="middle" fill="#64748b" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">40</text>
+<rect x="1646" y="860" width="68" height="26" rx="5" fill="#64748b" stroke="#0b1630" stroke-width="1.5"/>
+<text x="1680" y="878" font-size="12" text-anchor="middle" fill="#ffffff" font-family="IBM Plex Mono, Consolas, monospace" font-weight="600">39 GND</text>
+<text class="sv-dark" x="1516" y="231" font-size="11" text-anchor="end">spot</text>
+<text class="sv-dark" x="1640" y="936" font-size="12" text-anchor="middle">Pin 1 = square pad (seen from the</text>
+<text class="sv-dark" x="1640" y="952" font-size="12" text-anchor="middle">component side). Beep test, no power:</text>
+<text class="sv-dark" x="1640" y="968" font-size="12" text-anchor="middle">pin 1 ↔ pin 17 beeps (both 3V3),</text>
+<text class="sv-dark" x="1640" y="984" font-size="12" text-anchor="middle">pin 6 ↔ CN3 GND beeps.</text>
+<text class="sv-dark" x="40" y="1012" font-size="13.5">Plug-in jumper wires: female end on the Nucleo pin, male end into the RBT01 socket. Nothing is soldered on this sheet.</text>
+<text class="sv-dark" x="40" y="1036" font-size="13.5">Leave CN2 pins 2 and 4 (5 V) and every unlisted pin empty: they carry sensor and LED lines.</text>
+<text class="sv-alert" x="40" y="1060" font-size="13.5">Wiring check with power on: send MOTOR:1,30 then MOTOR:1,-30 and meter CN2 pin 23 to GND. It must switch between 0 V and 3.3 V (pins 24, 19, 21 for motors 2, 3, 4).</text>
+</svg></figure></section><section class="block">
+<h2>Before power, then firmware setup</h2>
+<p>Do these in order with the wheels off the ground. Commands go over the Nucleo's USB serial port (COM7, 115 200 baud), from the web serial tool or any terminal. Each command keeps a wheel turning for about 1.5 s, then the firmware stops it by itself.</p>
+<div class="cards">
+<article class="card">
+<h3>1 · Meter checks, no power</h3>
+<ul>
+<li>Across one motor's two pins: a few ohms (the winding). It may flicker as the shaft turns.</li>
+<li>Middle pair of each block, 1B ↔ 1A: not a short.</li>
+<li>Any motor pin ↔ GND: open.</li>
+<li>CN3 + ↔ GND: not a short. The reading climbs as the 330 µF capacitor charges.</li>
+<li>CN3 GND ↔ CN2 pin 6: beeps. CN2 pin 1 ↔ pin 17: beeps (both 3V3).</li>
+<li>Mode jumpers: J6 1-2, J7 2-3, J8 1-2, J11 1-2, J12 2-3, J13 1-2.</li>
+</ul>
+<p>Then power up in this order: Nucleo USB first, then motor power at 7.4–9 V with a 1 A current limit.</p>
+</article>
+<article class="card">
+<h3>2 · Set every wheel's direction</h3>
+<p>Start from a known state. <code>FLIP:n,1</code> is the default direction that matches the soldering rule.</p>
+<pre><b>LINK:0</b>        each wheel set on its own
+<b>MODE:MEC</b>      mecanum mixing
+<b>SFLIP:0</b>
+<b>FLIP:1,1</b>
+<b>FLIP:2,1</b>
+<b>FLIP:3,1</b>
+<b>FLIP:4,1</b></pre>
+<p>Then test each motor, n = 1 to 4:</p>
+<pre><b>MOTOR:n,30</b>    should roll forward
+<b>MOTOR:n,-30</b>   should roll backward</pre>
+<div class="tbl"><table>
+<thead><tr><th>You see</th><th>Do</th></tr></thead>
+<tbody>
+<tr><td>Forward, then backward</td><td class="ok">Nothing, it's right</td></tr>
+<tr><td>Backward, then forward</td><td class="fix"><code>INVERT:n</code></td></tr>
+<tr><td>Same way both times</td><td class="bad">Its direction wire isn't arriving (card 3)</td></tr>
+<tr><td>A different wheel turns</td><td class="bad">Wires on the wrong motor's pins: re-solder</td></tr>
+<tr><td>Nothing turns</td><td class="bad">Check its speed and enable wires, then <code>STATUS</code></td></tr>
+</tbody></table></div>
+</article>
+<article class="card">
+<h3>3 · Whole rover, then save</h3>
+<pre><b>FORWARD</b>       all four roll forward
+<b>BACKWARD</b>      all four roll backward
+<b>RIGHT</b>         spins clockwise, seen from above
+<b>STRAFE:40</b>     slides to the right
+<b>SAVE</b>          reply OK:SAVED, kept after power-off</pre>
+<ul>
+<li>Slides left on <code>STRAFE:40</code>: send <code>SFLIP:1</code>.</li>
+<li>Twists instead of sliding: the mecanum wheels are on the wrong corners. Swap the two front wheels with each other and the two rear wheels with each other.</li>
+<li><strong>Same way both times</strong> (the old front-wheel fault): meter that motor's direction pin on CN2 to GND while you send <code>MOTOR:n,30</code> then <code>MOTOR:n,-30</code>. Pins: M1 = 23, M2 = 24, M3 = 19, M4 = 21. It must switch between 0 V and 3.3 V. If it stays at 0 V, the driver's internal pull-down is winning because the wire isn't connected: re-seat it on the Nucleo (CN7-38, CN7-36, CN7-35, CN7-37).</li>
+</ul>
+</article>
+</div>
+</section></main><footer><div class="gutter">
+<p><strong>Signal chain:</strong> STM32L073RZ TIM3 CH1–CH4 (PC6 / PB5 / PB0 / PB1) for speed, PC0–PC3 for direction, PC4 / PC5 / PC9 / PC8 for enable → RBT01 CN2 → STSPIN948 U2 (M1, M2 → CN4) and U3 (M3, M4 → CN5). Motor power → CN3. Forward with the default settings drives the 2 pin high, so current enters each motor's black lead.</p>
+<p><strong>Sources:</strong> X-STM32MP-RBT01 user manual UM3482 Rev 1 (Table 11 CN2 pinout, Table 1 mode jumpers, schematic sheets 4–5 for CN3/CN4/CN5 and test points; its Table 2 wrongly lists the rear motors on CN3) · STSPIN948 datasheet DS14271 (Table 9 truth table; PH inputs have internal pull-downs) · NUCLEO-L073RZ user manual UM1724 Table 30 · X-NUCLEO-67W61M1 user manual UM3449 Tables 9 and 12 · firmware <code>17_Rover_MotorDriver_WiFi_ST67W61/firmware/Core/Inc/hardware_config.h</code> and <code>motor_control.c</code>.</p>
+</div></footer></div>
